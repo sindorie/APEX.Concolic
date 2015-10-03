@@ -15,6 +15,14 @@ public class CVCSolver {
 	
 //"/home/zhenxu/Tools/Solver/cvc4/cvc4-1.4-x86_64-linux-opt --lang smt --strings-exp --incremental ";
 
+	/**
+	 * 
+	 * @param statements
+	 * @return an array of string list. Such array is only of length 2. 
+	 * 		   the first part is from stdout while the second is from stderr
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
 	public static List<String>[] solve(List<String> statements) throws IOException, InterruptedException{
 		File tmpScript = File.createTempFile("Script#"+(index++), null);
 		PrintWriter pw = new PrintWriter(tmpScript);

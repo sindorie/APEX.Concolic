@@ -82,37 +82,15 @@ public class EventFactory {
 		return createTextEvet(clickEvent, text, "0x20001");
 	}
 	
-	
-	
 	private static Event createTextEvent(GraphicalLayout source, LayoutNode node, String text){
 		return createTextEvet(source, (node.startx+node.endx)/2,
 				(node.starty+node.endy)/2,text );
 	}
 	public static Event createClickEvent(GraphicalLayout source, LayoutNode node){
-//		System.out.println(node.className+" - "+node.id+" - "+node.startx+","+node.endx+", "+node.starty+","+node.endy);
-		
 		return createClickEvent(source, (node.startx+node.endx)/2,
 				(node.starty+node.endy)/2 );
 	}
-	
-	public static Event createClickEvent(
-			String serial1, GraphicalLayout source1, LayoutNode node1, 
-			String serial2, GraphicalLayout source2, LayoutNode node2){
-		
-		Event e = createClickEvent(source1, node1);
-		
-		e.putAttribute(serial1, 
-				Arrays.asList((node1.startx+node1.endx)/2,
-						(node1.starty+node1.endy)/2 ));
-		e.putAttribute(serial2, 
-				Arrays.asList((node2.startx+node2.endx)/2,
-						(node2.starty+node2.endy)/2 ));
-				
-		e.poly = true;
-		return e;
-	}
-	
-	
+
 	public static Event createClickEvent(GraphicalLayout source, int x, int y){
 		Event e = new Event();
 		e.source = source;

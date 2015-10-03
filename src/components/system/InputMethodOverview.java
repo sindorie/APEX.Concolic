@@ -104,7 +104,6 @@ public class InputMethodOverview {
 	
 	@Override
 	public String toString(){
-//		return String.join("; ", inputType, imeOptions, privateImeOptions, packageName, fieldId, fieldName);
 		return 	inputType+";"+
 				this.imeOptions+";"+
 				this.privateImeOptions+";"+
@@ -113,16 +112,3 @@ public class InputMethodOverview {
 				this.fieldName+";";
 	}
 }
-
-/* Sample for mInputEditorInfo
- 
-  mInputEditorInfo:
-    inputType=0x2002 imeOptions=0xc000005 privateImeOptions=null
-    actionLabel=null actionId=0
-    initialSelStart=0 initialSelEnd=0 initialCapsMode=0x2000
-    hintText=null label=null
-    packageName=com.example.testlayout fieldId=2131296327 fieldName=null
-    extras=null
- 
-
- */

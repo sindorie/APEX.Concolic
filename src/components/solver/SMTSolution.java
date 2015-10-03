@@ -15,7 +15,6 @@ import javax.swing.tree.TreeNode;
 
 import apex.symbolic.Expression;
 import components.ExpressionTranfomator;
-import support.Logger;
 
 public class SMTSolution {
 	static int index = 0;
@@ -45,12 +44,6 @@ public class SMTSolution {
 	public boolean isRelated(Collection<Expression> cumulatives, Map<Expression,Expression> syms){
 		if(syms == null || syms.isEmpty()) return false;
 		Set<Expression> vars = syms.keySet();
-		for(Expression expre : vars){
-			Logger.trace(expre.toYicesStatement());
-		}
-		for(Expression expre : this.getVarSet(cumulatives)){
-			Logger.trace(expre.toYicesStatement());
-		}
 		for(Expression cum : cumulatives){
 			for(Expression var : vars){
 				if(cum.contains(var)) return true;
