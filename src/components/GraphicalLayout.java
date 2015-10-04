@@ -4,8 +4,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import support.Logger;
-
 public class GraphicalLayout implements Serializable{ 
 	
 	String actName;

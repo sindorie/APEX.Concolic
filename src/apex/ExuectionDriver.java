@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import components.Event;
+import components.EventFactory;
 import components.EventSummaryPair;
 import components.EventSummaryManager;
 import components.ExpressionTranfomator;
@@ -14,11 +15,19 @@ import components.GraphicalLayout;
 public class ExuectionDriver {
 	
 	List<Event> newEventList = new ArrayList<Event>();
-	EventSummaryManager toValidate = new EventSummaryManager();
+	EventSummaryManager summaryManager = new EventSummaryManager();
 	EventExecution eExecution = new EventExecution(Common.serial, Common.model, Common.app);
 	GraphicalLayout currentUI = GraphicalLayout.Launcher;
 	Map<String, List<List<EventSummaryPair>>> foundSequences = 
 				new HashMap<String, List<List<EventSummaryPair>>>();
+	
+	
+	 void prepare(){
+		 String pkgName = Common.app.getPackageName();
+		 String actName = Common.app.getMainActivity().getJavaName();
+		 newEventList.add(EventFactory.createLaunchEvent(
+				 GraphicalLayout.Launcher, pkgName, actName));
+	 }
 	
 	/**
 	 * drive the execution
@@ -28,7 +37,8 @@ public class ExuectionDriver {
 		Event event = null;
 		EventSummaryPair validationCandidate = null;
 		if(!newEventList.isEmpty()){
-			event = newEventList.get(0); 
+			event = newEventList.get(0);
+			if(Common.DEBUG){System.out.println("New Event: "+event.toString());}
 			if(!event.getSource().equals(this.currentUI)){
 				if(eExecution.reposition(currentUI, event.getSource())){
 					this.currentUI = event.getSource();
@@ -39,9 +49,9 @@ public class ExuectionDriver {
 					return; 
 				}
 			}
-		}else if(!toValidate.hasNext()){
-			validationCandidate = toValidate.next();
+		}else if( (validationCandidate = summaryManager.next()) != null ){
 			event = validationCandidate.getEvent();
+			if(Common.DEBUG){System.out.println("Validation: "+validationCandidate.toString());}
 			if(validationCandidate.isExecuted()) return; //should not happen
 			List<EventSummaryPair> solvingSequence = Common.esManager.getNextSequence(validationCandidate);
 			if(solvingSequence == null) return;

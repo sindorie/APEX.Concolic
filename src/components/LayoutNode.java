@@ -5,8 +5,6 @@ import java.util.Map;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
-import support.Logger;
-
 
 public class LayoutNode extends DefaultMutableTreeNode{ 
 	LayoutNode parent;

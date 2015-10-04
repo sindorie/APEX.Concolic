@@ -9,8 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 
-import support.Logger;
-
 public class EventSummaryPriorityQueue implements Serializable{
 
 	public Map<Integer, List<EventSummaryPair>> map = new HashMap<Integer,List<EventSummaryPair>>();
@@ -36,7 +34,6 @@ public class EventSummaryPriorityQueue implements Serializable{
 		Integer level = queue.peek();
 		List<EventSummaryPair> sumList = map.get(level);
 		if(sumList == null || sumList.isEmpty()){
-			Logger.trace("Something wrong");
 			return null;
 		}else{
 			return sumList.get(0);

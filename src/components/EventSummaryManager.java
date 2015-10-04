@@ -242,7 +242,7 @@ public class EventSummaryManager implements Serializable{
 		
 		PathSummary path = esPair.getPathSummary();
 		Event event = esPair.getEvent();
-		List<String> logs = path.getBranchExecutionLog();
+		List<String> logs = path== null ? null : path.getBranchExecutionLog();
 		
 		Map<String, Map<Integer, List<EventSummaryPair>>> primary = storage.get(event);
 		if(primary == null){ 

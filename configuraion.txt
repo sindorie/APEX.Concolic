@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<cong>
+    <yices>/home/zhenxu/Tools/Solver/yices-2.4.1/bin/yices</yices>
+    <cvc4>/home/zhenxu/Tools/Solver/cvc4/cvc4-1.4-x86_64-linux-opt --lang smt --strings-exp --incremental </cvc4>
+    <adb>adb</adb>
+</cong>

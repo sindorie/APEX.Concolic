@@ -69,6 +69,11 @@ public class EventSummaryPair extends DefaultEdge implements Serializable{
 		return false;
 	}
 	
+	@Override 
+	public String toString(){
+		return this.event.toString()+"_"+summary==null?"null":summary.getExecutionLog().get(0);
+	}
+	
 	@Override
 	public int hashCode(){
 		return this.event.hashCode();

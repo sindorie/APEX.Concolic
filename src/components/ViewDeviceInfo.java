@@ -19,7 +19,6 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import apex.Configuration;
-import support.Logger;
 import support.TreeUtility;
 import support.TreeUtility.Searcher;
  
@@ -57,7 +56,6 @@ public class ViewDeviceInfo {
 	 */
 	private int index = 0;
 	public LayoutNode loadWindowData(){
-		Logger.trace();
 		mRootNode = null;
 		ProcRunner procRunner;
 		int retCode, waitTime = 10*1000;
@@ -84,7 +82,6 @@ public class ViewDeviceInfo {
 		        LayoutNode result =  buildTree(xmlDumpFile);
 		        xmlDumpFile.delete();
 		        
-		        Logger.trace(result.toFormatedString());
 		        return result;
 			} catch (IOException e) { }
 			try { Thread.sleep(1000); } catch (InterruptedException e) { lastException = e;}

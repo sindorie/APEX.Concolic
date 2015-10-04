@@ -61,7 +61,6 @@ public class CommandLine {
 		Process task = null;
 		InputStream stderrStream = null, stdoutStream = null;
 		clear();
-		Logger.debug(command);
 		try {
 			task = Runtime.getRuntime().exec(command);
 			if(timeout_ms>0){ 
@@ -92,8 +91,8 @@ public class CommandLine {
 	
 				stdoutSB.append(reading);
 			}
-			if(DEBUG)Logger.trace("Stdout: "+stdoutSB.toString().replace("\r|\n", ""));
-			if(DEBUG)Logger.trace("Stderr: "+stderrSB.toString().replace("\r|\n", ""));
+//			if(DEBUG)Logger.trace("Stdout: "+stdoutSB.toString().replace("\r|\n", ""));
+//			if(DEBUG)Logger.trace("Stderr: "+stderrSB.toString().replace("\r|\n", ""));
 			return task.exitValue();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -101,8 +100,8 @@ public class CommandLine {
 			e.printStackTrace();
 		}
 		
-		if(DEBUG)Logger.trace("Stdout: "+stdoutSB.toString().replace("\r|\n", ""));
-		if(DEBUG)Logger.trace("Stderr: "+stderrSB.toString().replace("\r|\n", ""));
+//		if(DEBUG)Logger.trace("Stdout: "+stdoutSB.toString().replace("\r|\n", ""));
+//		if(DEBUG)Logger.trace("Stderr: "+stderrSB.toString().replace("\r|\n", ""));
 		return -1;
 	}
 

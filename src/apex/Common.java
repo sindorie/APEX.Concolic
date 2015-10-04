@@ -22,5 +22,5 @@ public class Common {
 	public static List<String> remaining;
 	
 	public static StaticApp app;
-	
+	public static boolean DEBUG = true;
 }

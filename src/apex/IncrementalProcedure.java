@@ -32,6 +32,7 @@ public class IncrementalProcedure {
 		Common.model = new UIModel();
 		
 		driver = new ExuectionDriver();
+		driver.prepare();
 	}
 	void check(){
 		//TODO 
@@ -45,7 +46,7 @@ public class IncrementalProcedure {
 	}
 	void postLoop(){ }
 	boolean isLimitReached(){
-		return iterationCount < 0xFFFF;
+		return iterationCount > 0xFFFF;
 	}
 	boolean isAllreached(){
 		if(Common.targets == null || Common.targets.isEmpty()) return false;

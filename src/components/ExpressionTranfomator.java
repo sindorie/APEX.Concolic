@@ -147,8 +147,8 @@ public class ExpressionTranfomator {
 			if(mappedOperator != null){
 				return processOperator(mappedOperator, input);
 			}
-		}
-		support.Logger.trace(content);
+		};
+		System.out.println("Unkown: "+ content);
 		return null; //invalid case
 	}
 	
@@ -411,9 +411,6 @@ public class ExpressionTranfomator {
 			Expression formated_val = recusiveBuildDispatcher(val);
 			
 			if(formated_arr==null ||  formated_index==null || formated_val==null){
-				support.Logger.trace(formated_arr);
-				support.Logger.trace(formated_index);
-				support.Logger.trace(formated_val);
 				return null;
 			}
 			
@@ -445,7 +442,7 @@ public class ExpressionTranfomator {
 			
 			return secltionNode;
 		}
-		support.Logger.trace(operator);
+		System.out.println("Unkown operator:"+operator);
 		return null;
 	}
 	
@@ -523,8 +520,6 @@ public class ExpressionTranfomator {
 		Expression formated_op1 = recusiveBuildDispatcher(op1);
 		Expression formated_op2 = recusiveBuildDispatcher(op2);
 		if(formated_op1 == null || formated_op2 == null){
-			support.Logger.trace(formated_op1);
-			support.Logger.trace(formated_op2);
 			return null;
 		}
 		
@@ -628,7 +623,6 @@ public class ExpressionTranfomator {
 					if(str2 == null) return null;
 				}else{
 					//other type is not supported
-					support.Logger.trace(type);
 					return null;
 				}
 				
@@ -726,7 +720,7 @@ public class ExpressionTranfomator {
 			}
 		}
 		
-		support.Logger.trace(Arrays.toString(decoded) + "#"+argTypes);
+//		support.Logger.trace(Arrays.toString(decoded) + "#"+argTypes);
 		return null;
 	}
 	
@@ -749,7 +743,7 @@ public class ExpressionTranfomator {
 	Expression formateField(Expression expre){
 		String[] id_type = retrieveFiledId(expre);
 		if(id_type == null){
-			support.Logger.trace(expre.toYicesStatement());
+//			support.Logger.trace(expre.toYicesStatement());
 			return null;
 		}
 		
@@ -763,7 +757,7 @@ public class ExpressionTranfomator {
 			String elementType = type.substring(arrIndex+1, type.length());
 			String mappedType = typeMap.get(elementType);
 			if(mappedType == null){
-				support.Logger.trace(mappedType);
+//				support.Logger.trace(mappedType);
 				return null; //unknown element type 
 			}
 			String arrType = recursiveBuildArrayType(dim, mappedType);
@@ -773,7 +767,7 @@ public class ExpressionTranfomator {
 		}
 		
 		if(type == null){
-			support.Logger.trace(id_type[1]);
+//			support.Logger.trace(id_type[1]);
 			return null;
 		}
 		var.add(new Expression(type)); //type
