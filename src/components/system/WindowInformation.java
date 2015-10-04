@@ -81,6 +81,7 @@ public class WindowInformation{
 	}
 	
 	public int isWithinApplciation(StaticApp app){
+		if(app == null) return SCOPE_OUT;
 		if(pkgName.toLowerCase().contains("com.android.launcher")) return SCOPE_LAUNCHER;
 		if(pkgName.equals(app.getPackageName())) return SCOPE_WITHIN;
 		else return SCOPE_OUT;

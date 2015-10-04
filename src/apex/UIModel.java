@@ -7,12 +7,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.swing.tree.TreeNode;
+
 import org.jgrapht.alg.DijkstraShortestPath;
 import org.jgrapht.graph.ListenableDirectedGraph;
 
+import support.TreeUtility;
+import support.TreeUtility.Searcher;
+import components.Event;
+import components.EventFactory;
 import components.EventSummaryPair;
 import components.GraphicalLayout;
 import components.LayoutNode;
+import components.system.InputMethodOverview;
 
 public class UIModel {	
 	
@@ -23,6 +30,7 @@ public class UIModel {
 	private List<EventSummaryPair> currentLine;
 	private Map<GraphicalLayout, List<EventSummaryPair>> knownSequence;
 	private List<EventSummaryPair> allKnownEdges;
+	private transient List<Event> newEventBuffer;
 	
 	public UIModel(){
 		graph = new ListenableDirectedGraph<GraphicalLayout, EventSummaryPair>(EventSummaryPair.class);
@@ -36,7 +44,7 @@ public class UIModel {
 		graph.addVertex(GraphicalLayout.Launcher);
 	}
 	
-	public void update(EventSummaryPair esPair){
+	public List<Event> update(EventSummaryPair esPair, EventExecutionResult exeResult){
 		allKnownEdges.add(esPair);
 		if(esPair.getSource() == esPair.getTarget()){
 			List<EventSummaryPair> list = vertex_to_loopEdges.get(esPair.getSource());
@@ -44,8 +52,31 @@ public class UIModel {
 				list = new ArrayList<EventSummaryPair>();
 				vertex_to_loopEdges.put(esPair.getSource(), list);
 			}
-			list.add(esPair);
-		}else{ graph.addEdge(esPair.getSource(), esPair.getTarget(), esPair); }
+			if(!list.contains(esPair)) list.add(esPair);
+		}else if(!this.graph.containsEdge(esPair)){
+			graph.addEdge(esPair.getSource(), esPair.getTarget(), esPair); 
+		}
+		
+		List<Event> events = newEventBuffer;
+		if(exeResult.keyboardVisible){
+			Event event = esPair.getEvent();
+			if(event.getEventType() == EventFactory.iONCLICK){
+				GraphicalLayout g = event.getSource();
+				String iType = exeResult.iInfo.inputType;
+				String toEnter = InputMethodOverview.predefinedInput.get(iType);
+				if(toEnter == null){ toEnter = "hello"; }
+				Event textInput = EventFactory.createTextEvet(event, toEnter);
+				if(!g.candidates.contains(textInput)){
+					if(events == null){
+						events = new ArrayList<Event>();
+					}
+					events.add(textInput);
+					g.candidates.add(textInput);
+				}
+			}
+		}
+		newEventBuffer = null;
+		return events;
 	}
 
 	public GraphicalLayout findOrConstructUI(String actName, LayoutNode node){
@@ -71,7 +102,7 @@ public class UIModel {
 		return this.graph;
 	}
 	
-	void record(EventSummaryPair step){
+	public void record(EventSummaryPair step){
 		if(currentLine == null){
 			currentLine = new ArrayList<EventSummaryPair>();
 			currentLine.add(step);
@@ -83,11 +114,15 @@ public class UIModel {
 			}
 		}
 	}
-	void hasReinstalled(){
+	public void hasReinstalled(){
 		if(currentLine != null){
 			this.slices.add(currentLine);
 			currentLine = null;
 		}
+	}
+	public List<EventSummaryPair> getCurrentLine(){
+		if(currentLine == null) return null;
+		return new ArrayList<EventSummaryPair>(currentLine);
 	}
 	
 	public List<EventSummaryPair> getAllEdges(){
@@ -106,7 +141,6 @@ public class UIModel {
 		return list;
 	}
 	
-	
 	private void addUI(GraphicalLayout g){
 		List<GraphicalLayout> list = this.nameToUI.get(g.getActName());
 		if(list == null){
@@ -116,5 +150,41 @@ public class UIModel {
 		list.add(g);
 	}
 	
-	
+	void createNewEvent(GraphicalLayout layout){
+		List<Event> toAdd = new ArrayList<Event>();
+		TreeUtility.breathFristSearch(layout.getRootNode(), new Searcher(){
+			@Override
+			public int check(TreeNode treeNode) {
+//				if(treeNode == null){ UIUtility.showTree(treeNode); }
+				if(treeNode == null) return Searcher.NORMAL;
+				LayoutNode node = (LayoutNode)treeNode;
+//				generateEventOnNode(toAdd, layout, node);
+				if(node.isLeaf()){
+					if(node.clickable){ 
+						Event next = EventFactory.createClickEvent(layout, node);
+						if(!toAdd.contains(next)){
+							toAdd.add(next); 
+						}
+					}else if(node.checkable){
+						Event next = EventFactory.createClickEvent(layout, node);
+						if(!toAdd.contains(next)){
+							toAdd.add(next); 
+						}
+					}
+				}else{
+					if(node.getParent() != null && node.getParent().clickable){
+						Event next = EventFactory.createClickEvent(layout, node);
+						if(!toAdd.contains(next)){
+							toAdd.add(next); 
+						}
+					}
+				}
+				return Searcher.NORMAL;
+			}
+		});
+		
+		layout.candidates.addAll(toAdd);
+		if(newEventBuffer == null){ newEventBuffer = toAdd;
+		}else{ newEventBuffer.addAll(toAdd); }
+	}
 }

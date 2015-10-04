@@ -1,7 +1,5 @@
 package components;
 
-import java.util.Arrays;
-
 import android.view.KeyEvent;
 
 public class EventFactory { 
@@ -15,7 +13,6 @@ public class EventFactory {
 			att_textInputType = "event_input_type",
 			att_textInput = "event_input";
 
-	
 	public static final long 
 			NON_SLEEP = 0, 
 			LAUNCH_SLEEP = 2000,
@@ -82,10 +79,6 @@ public class EventFactory {
 		return createTextEvet(clickEvent, text, "0x20001");
 	}
 	
-	private static Event createTextEvent(GraphicalLayout source, LayoutNode node, String text){
-		return createTextEvet(source, (node.startx+node.endx)/2,
-				(node.starty+node.endy)/2,text );
-	}
 	public static Event createClickEvent(GraphicalLayout source, LayoutNode node){
 		return createClickEvent(source, (node.startx+node.endx)/2,
 				(node.starty+node.endy)/2 );
@@ -140,6 +133,7 @@ public class EventFactory {
 		case iREINSTALL: return EventFactory.REINSTALL_SLEEP;
 		case iPRESS: 	return EventFactory.PRESS_SLEEP;
 		case iONCLICK: 	return EventFactory.ONCLICK_SLEEP;
+		case iINPUT: return EventFactory.ONCLICK_SLEEP;
 		case iUNDEFINED:
 		default: return EventFactory.NON_SLEEP;
 		}

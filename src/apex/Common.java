@@ -1,7 +1,10 @@
 package apex;
 
 import java.util.List;
+import java.util.Map;
+
 import components.EventSummaryManager;
+import components.EventSummaryPair;
 import components.ViewDeviceInfo;
 import components.system.InformationCollector;
 import components.system.LogcatReader;
@@ -19,8 +22,5 @@ public class Common {
 	public static List<String> remaining;
 	
 	public static StaticApp app;
-	public static InformationCollector sysInfo;
-	public static ViewDeviceInfo viewInfoView;
-	public static LogcatReader logcatReader;
 	
 }

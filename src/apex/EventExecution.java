@@ -2,8 +2,7 @@ package apex;
 
 import java.util.List;
 
-import javax.swing.tree.DefaultMutableTreeNode;
-
+import apex.staticFamily.StaticApp;
 import components.Event;
 import components.EventExecutor;
 import components.EventFactory;
@@ -21,25 +20,35 @@ public class EventExecution {
 	
 	Event closeKeyboard = EventFactory.createCloseKeyboardEvent();
 	EventExecutor ex;
+	InformationCollector sysInfo;
+	ViewDeviceInfo viewInfoView;
+	LogcatReader logcatReader;
+	UIModel model;
+	StaticApp app; 
 	
-	public EventExecution(){
-		ex = new EventExecutor(Common.serial);
+	public EventExecution(String serial, UIModel model, StaticApp app){
+		ex = new EventExecutor(serial);
+		sysInfo = new InformationCollector(serial);
+		viewInfoView = new ViewDeviceInfo(serial);
+		logcatReader = new LogcatReader(serial);
+		this.model = model;
+		this.app = app;
 	}
 	
 	EventExecutionResult carrayout(Event event){
-		Common.logcatReader.clearLogcat();
+		logcatReader.clearLogcat();
 		ex.applyEvent(event);
 		try { Thread.sleep(100);
 		} catch (InterruptedException e1) { }
 		
 		//read lines
-		List<String> lines = Common.logcatReader.readLogcatFeedBack();
-		List<List<String>> sequences = Common.logcatReader.extractMethodSequence(lines);
+		List<String> lines = logcatReader.readLogcatFeedBack();
+		List<List<String>> sequences = logcatReader.extractMethodSequence(lines);
 		try { Thread.sleep(300); } catch (InterruptedException e1) { }
 
 		//check if the UI within the app		
-		InputMethodOverview iInfo = Common.sysInfo.getInputMethodOverview();
-		WindowOverview wInfo = Common.sysInfo.getWindowOverview();
+		InputMethodOverview iInfo = sysInfo.getInputMethodOverview();
+		WindowOverview wInfo = sysInfo.getWindowOverview();
 		boolean keyboardVisible = wInfo.isKeyboardVisible();
 		if (keyboardVisible) {ex.applyEvent(closeKeyboard);}
 		WindowInformation focusedWin = wInfo.getFocusedWindow();
@@ -50,14 +59,14 @@ public class EventExecution {
 				return null;
 			}
 			try { Thread.sleep(20); } catch (InterruptedException e1) { }
-			focusedWin = Common.sysInfo.getWindowOverview().getFocusedWindow();
+			focusedWin = sysInfo.getWindowOverview().getFocusedWindow();
 			count += 1;
 		}	
 		
 		LayoutNode node = null;
-		int scope = focusedWin.isWithinApplciation(Common.app);
+		int scope = focusedWin.isWithinApplciation(app);
 		if( scope == WindowInformation.SCOPE_WITHIN ){
-			node = Common.viewInfoView.loadWindowData();
+			node = viewInfoView.loadWindowData();
 		}
 		EventExecutionResult result = new EventExecutionResult();
 		if( scope == WindowInformation.SCOPE_LAUNCHER ){
@@ -77,19 +86,19 @@ public class EventExecution {
 		if(check){
 			for(int i = 0 ; i<eList.size() ; i++){
 				ex.applyEvent(eList.get(i).getEvent());
-				if( Common.sysInfo.getWindowOverview().isKeyboardVisible() ){
+				if( sysInfo.getWindowOverview().isKeyboardVisible() ){
 					ex.applyEvent(closeKeyboard);
 				}
-				Common.model.record(eList.get(i));
+				if(model != null) model.record(eList.get(i));
 			}
 			return null;
 		}else{
 			for(int i = 0 ; i<eList.size() -1 ; i++){
 				ex.applyEvent(eList.get(i).getEvent());	
-				if( Common.sysInfo.getWindowOverview().isKeyboardVisible() ){
+				if( sysInfo.getWindowOverview().isKeyboardVisible() ){
 					ex.applyEvent(closeKeyboard);
 				}
-				Common.model.record(eList.get(i));
+				if(model != null) model.record(eList.get(i));
 			}
 			return carrayout(eList.get(eList.size()-1).getEvent());
 		}

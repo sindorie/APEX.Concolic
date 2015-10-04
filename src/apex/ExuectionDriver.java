@@ -1,7 +1,9 @@
 package apex;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import components.Event;
 import components.EventSummaryPair;
@@ -13,9 +15,11 @@ public class ExuectionDriver {
 	
 	List<Event> newEventList = new ArrayList<Event>();
 	EventSummaryManager toValidate = new EventSummaryManager();
-	ExpressionTranfomator tranform;
-	EventExecution eExecution = new EventExecution();
-	GraphicalLayout currentUI;
+	EventExecution eExecution = new EventExecution(Common.serial, Common.model, Common.app);
+	GraphicalLayout currentUI = GraphicalLayout.Launcher;
+	Map<String, List<List<EventSummaryPair>>> foundSequences = 
+				new HashMap<String, List<List<EventSummaryPair>>>();
+	
 	/**
 	 * drive the execution
 	 * @return if should 
@@ -48,14 +52,35 @@ public class ExuectionDriver {
 		}
 		
 		EventExecutionResult finalResult = eExecution.carrayout(event);
-		if(finalResult == null){}//something is wrong; -- Cannot retrieve focused window
+		if(finalResult == null){
+			System.out.println("Final reuslt is null for execution result");
+			return;
+		}//something is wrong; -- Cannot retrieve focused window
 		EventSummaryPair esPair = Common.esManager.findSummary(event, finalResult.sequences);
 		GraphicalLayout dest 
 			= finalResult.predefinedUI != null ? finalResult.predefinedUI
 			: Common.model.findOrConstructUI(finalResult.focusedWin.actName, finalResult.node);
 		esPair.setTarget(dest);
 		currentUI = dest;
-		Common.model.update(esPair);
+		List<Event> newEvents = Common.model.update(esPair, finalResult);
+		if(newEvents != null) newEventList.addAll(newEvents);
+		
 		Common.model.record(esPair);
+		checkTargetReach(finalResult.log);
+	}
+	
+	void checkTargetReach(List<String> log){
+		if(log == null || Common.targets == null || Common.targets.isEmpty()) return;
+		for(String line : log){
+			if(Common.targets.contains(line)){
+				Common.remaining.remove(line);
+				List<List<EventSummaryPair>> seqRecord = foundSequences.get(line);
+				if(seqRecord == null){
+					seqRecord = new ArrayList<List<EventSummaryPair>>();
+					foundSequences.put(line, seqRecord);
+				}
+				seqRecord.add(Common.model.getCurrentLine());
+			}
+		}
 	}
 }
