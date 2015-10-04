@@ -30,16 +30,13 @@ public class ExuectionDriver {
 		if(!newEventList.isEmpty()){
 			event = newEventList.get(0); 
 			if(!event.getSource().equals(this.currentUI)){
-				List<EventSummaryPair> repositionSequence = 
-						Common.model.findKownSequence(event.getSource());
-				if(repositionSequence == null) return;
-				EventExecutionResult midResult = eExecution.doSequence(repositionSequence, true);
-				GraphicalLayout focuedWin 
-					= midResult.predefinedUI != null ? midResult.predefinedUI
-					: Common.model.findOrConstructUI(midResult.focusedWin.actName, midResult.node);
-				this.currentUI = focuedWin;
-				if( event.getSource() != focuedWin ){
-					return; // reposition failure
+				if(eExecution.reposition(currentUI, event.getSource())){
+					this.currentUI = event.getSource();
+				}else{
+					eExecution.reinstall();
+					this.currentUI = GraphicalLayout.Launcher;
+					System.out.println("New event reposition failure");
+					return; 
 				}
 			}
 		}else if(!toValidate.hasNext()){
@@ -48,7 +45,16 @@ public class ExuectionDriver {
 			if(validationCandidate.isExecuted()) return; //should not happen
 			List<EventSummaryPair> solvingSequence = Common.esManager.getNextSequence(validationCandidate);
 			if(solvingSequence == null) return;
-			eExecution.doSequence(solvingSequence, false);
+			eExecution.reinstall();
+			EventExecutionResult midResult = eExecution.doSequence(solvingSequence, true);
+			
+			GraphicalLayout focuedWin 
+				= midResult.predefinedUI != null ? midResult.predefinedUI
+				: Common.model.findOrConstructUI(midResult.focusedWin.actName, midResult.node);
+			this.currentUI = focuedWin;
+			if(!focuedWin.equals(event.getSource())){
+				return; //failure
+			}
 		}
 		
 		EventExecutionResult finalResult = eExecution.carrayout(event);

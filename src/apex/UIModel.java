@@ -115,7 +115,7 @@ public class UIModel {
 		}
 	}
 	public void hasReinstalled(){
-		if(currentLine != null){
+		if(currentLine != null && !currentLine.isEmpty()){
 			this.slices.add(currentLine);
 			currentLine = null;
 		}

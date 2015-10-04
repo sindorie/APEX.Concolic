@@ -125,7 +125,12 @@ public class EventSummaryManager implements Serializable{
 	 */
 	public EventSummaryPair next(){
 		while(!queue.isEmpty()){
-			if(!queue.peek().isExecuted()) return queue.poll();
+			if(!queue.peek().isExecuted()){
+				EventSummaryPair result = queue.poll();
+				result.increaseCount();
+				queue.add(result);
+				return result;
+			}
 			queue.poll();
 		}
 		return null;

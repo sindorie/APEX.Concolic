@@ -45,7 +45,7 @@ public class EventSummaryPair extends DefaultEdge implements Serializable{
 	public Event getEvent() {
 		return event;
 	}
-	public void increateCount() {
+	public void increaseCount() {
 		this.validationTries += 1;
 	}
 	public int getValidationCount(){

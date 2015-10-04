@@ -35,6 +35,39 @@ public class EventExecution {
 		this.app = app;
 	}
 	
+	public void reinstall(){
+		String pkgName = this.app.getPackageName();
+		ex.applyEvent(EventFactory.createReinstallEvent(pkgName, app.getInstrumentedApkPath()));
+		model.hasReinstalled();
+	}
+	
+	public boolean reposition(GraphicalLayout current, GraphicalLayout target){
+		List<EventSummaryPair> repositionSequence = null;
+		{ //try find a pat from current to target
+			repositionSequence = Common.model.findSequence(current, target);
+			if(repositionSequence != null){
+				EventExecutionResult midResult = this.doSequence(repositionSequence, true);
+				GraphicalLayout focuedWin 
+					= midResult.predefinedUI != null ? midResult.predefinedUI
+					: Common.model.findOrConstructUI(midResult.focusedWin.actName, midResult.node);
+				if(target == focuedWin) return true;
+			}
+		}
+		
+		{ //try to find a known sequence from launcher
+			repositionSequence = Common.model.findKownSequence(target);
+			if(repositionSequence != null){
+				reinstall();
+				EventExecutionResult midResult = this.doSequence(repositionSequence, true);
+				GraphicalLayout focuedWin 
+					= midResult.predefinedUI != null ? midResult.predefinedUI
+					: Common.model.findOrConstructUI(midResult.focusedWin.actName, midResult.node);
+				if(target == focuedWin) return true;
+			}
+		}
+		return false; // failure
+	}
+	
 	EventExecutionResult carrayout(Event event){
 		logcatReader.clearLogcat();
 		ex.applyEvent(event);
@@ -83,7 +116,7 @@ public class EventExecution {
 	}
 	
 	public EventExecutionResult doSequence(List<EventSummaryPair> eList, boolean check){
-		if(check){
+		if(check == false){
 			for(int i = 0 ; i<eList.size() ; i++){
 				ex.applyEvent(eList.get(i).getEvent());
 				if( sysInfo.getWindowOverview().isKeyboardVisible() ){
