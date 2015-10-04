@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.jgrapht.alg.DijkstraShortestPath;
 import org.jgrapht.graph.ListenableDirectedGraph;
 
 import components.EventSummaryPair;
@@ -92,11 +93,13 @@ public class UIModel {
 	public List<EventSummaryPair> getAllEdges(){
 		return allKnownEdges;
 	}
+	public Set<GraphicalLayout> getAllVertex(){
+		return this.graph.vertexSet();
+	}
 	
-//	List<EventSummaryPair> findSequence(GraphicalLayout source, GraphicalLayout target){
-//		
-//		return null;
-//	}
+	public List<EventSummaryPair> findSequence(GraphicalLayout source, GraphicalLayout target){
+		return DijkstraShortestPath.findPathBetween(graph, source, target);
+	}
 	
 	List<EventSummaryPair> findKownSequence(GraphicalLayout target){
 		List<EventSummaryPair> list = knownSequence.get(target);

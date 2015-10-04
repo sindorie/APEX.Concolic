@@ -1,7 +1,7 @@
 package apex;
 
 import java.util.List;
-import components.EventSummaryDeposit;
+import components.EventSummaryManager;
 import components.ViewDeviceInfo;
 import components.system.InformationCollector;
 import components.system.LogcatReader;
@@ -11,7 +11,7 @@ import apex.symbolic.SymbolicExecution;
 public class Common {
 	public static UIModel model;
 	public static SymbolicExecution symbolic;
-	public static EventSummaryDeposit esDeposit;
+	public static EventSummaryManager esManager;
 	
 	public static String apkPath;
 	public static String serial;

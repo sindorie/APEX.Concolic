@@ -3,6 +3,7 @@ package components;
 import java.io.Serializable;
 import java.util.Comparator;
 
+import apex.Common;
 import components.EventSummaryPair;
 
 public class ESPriority implements Comparator<EventSummaryPair>, Serializable{
@@ -15,11 +16,14 @@ public class ESPriority implements Comparator<EventSummaryPair>, Serializable{
 	 * @return
 	 */
 	public static int calculate(EventSummaryPair esPair){
-		int tryCount = esPair.getTryCount();
-		int symCount = esPair.getCombinedSymbolic().size();
-		int conCount = esPair.getCombinedConstraint().size();
-//		int tarCount = esPair.targetLines.size();
-		return -tryCount + symCount - conCount;
+		int tryCount = esPair.getValidationCount();
+		int symCount = esPair.getPathSummary().getSymbolicStates().size();
+		int conCount = esPair.getPathSummary().getPathConditions().size();
+		int distence = Common.model.findSequence(GraphicalLayout.Launcher, 
+				esPair.getSource()).size(); //-- this change over time cannot control well.
+		int targets = esPair.getTargetLines() == null? 0 : esPair.getTargetLines().size();
+		
+		return -tryCount + symCount - conCount - distence + targets; //
 	}
 
 	@Override

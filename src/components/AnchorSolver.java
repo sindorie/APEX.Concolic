@@ -2,18 +2,11 @@ package components;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
-import javax.swing.JScrollPane;
-import javax.swing.JTabbedPane;
-import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeNode;
 
@@ -24,10 +17,8 @@ import org.jgrapht.graph.MaskFunctor;
 import apex.Common;
 import apex.symbolic.Expression;
 import apex.symbolic.PathSummary;
-import support.CommandLine;
 import support.TreeUtility;
 import support.TreeUtility.Searcher;
-import components.Event;
 import components.EventSummaryPair;
 import components.GraphicalLayout;
 import components.solver.CVCSolver;
@@ -124,7 +115,7 @@ public class AnchorSolver {
 			}
 		});
 		
-		Collections.sort(anchorSeqs, new SZComparator());
+		Collections.sort(anchorSeqs, new ListSZComparator());
 		
 		List<List<EventSummaryPair>> expandedList = new ArrayList<List<EventSummaryPair>>();
 		Major: for(List<EventSummaryPair> anchors : anchorSeqs){
@@ -155,7 +146,7 @@ public class AnchorSolver {
 			expandedList.add(expanded);
 		}
 		
-		Collections.sort(expandedList, new SZComparator());
+		Collections.sort(expandedList, new ListSZComparator());
 		return expandedList;
 	}
 	
@@ -217,12 +208,5 @@ public class AnchorSolver {
 		EventSummaryPair esPair;
 		PathSummary cumulative;
 		boolean complete = false;
-	}
-	
-	class SZComparator implements Comparator<List<EventSummaryPair>>{
-		@Override
-		public int compare(List<EventSummaryPair> o1, List<EventSummaryPair> o2) {
-			return o1.size() - o2.size();
-		}
 	}
 }	

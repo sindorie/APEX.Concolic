@@ -1,6 +1,6 @@
 package apex;
 
-import components.EventSummaryDeposit;
+import components.EventSummaryManager;
 import apex.staticFamily.StaticAppBuilder;
 import apex.symbolic.SymbolicExecution;
 
@@ -14,7 +14,7 @@ public class mainProcedure {
 		Common.app.instrument();
 		Common.apkPath = apkPath;
 		Common.symbolic = new SymbolicExecution(Common.app);
-		Common.esDeposit = new EventSummaryDeposit();
+		Common.esManager = new EventSummaryManager();
 		//TODO
 		Common.model = new UIModel();
 		driver = new ExuectionDriver();
@@ -61,6 +61,10 @@ public class mainProcedure {
 	boolean isAllreached(){
 		if(Common.targets == null || Common.targets.isEmpty()) return false;
 		return Common.remaining.isEmpty();
+	}
+	
+	public int getCurrentLoopCount(){
+		return this.iterationCount;
 	}
 	
 	static void go(){}

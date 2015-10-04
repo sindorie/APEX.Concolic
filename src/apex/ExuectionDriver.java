@@ -1,24 +1,18 @@
 package apex;
 
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
 
-import javax.swing.tree.DefaultMutableTreeNode;
-
-import apex.staticFamily.StaticMethod;
-import apex.symbolic.PathSummary;
 import components.Event;
 import components.EventSummaryPair;
-import components.EventSummaryDeposit;
+import components.EventSummaryManager;
 import components.ExpressionTranfomator;
 import components.GraphicalLayout;
-import components.WrappedSummary;
 
 public class ExuectionDriver {
 	
 	List<Event> newEventList = new ArrayList<Event>();
-	EventSummaryDeposit toValidate = new EventSummaryDeposit();
+	EventSummaryManager toValidate = new EventSummaryManager();
 	ExpressionTranfomator tranform;
 	EventExecution eExecution = new EventExecution();
 	GraphicalLayout currentUI;
@@ -44,19 +38,18 @@ public class ExuectionDriver {
 					return; // reposition failure
 				}
 			}
-		}else if(!toValidate.isEmpty()){
+		}else if(!toValidate.hasNext()){
 			validationCandidate = toValidate.next();
 			event = validationCandidate.getEvent();
 			if(validationCandidate.isExecuted()) return; //should not happen
-			//TODO solving;
-			List<EventSummaryPair> solvingSequence = null;
+			List<EventSummaryPair> solvingSequence = Common.esManager.getNextSequence(validationCandidate);
 			if(solvingSequence == null) return;
 			eExecution.doSequence(solvingSequence, false);
 		}
 		
 		EventExecutionResult finalResult = eExecution.carrayout(event);
 		if(finalResult == null){}//something is wrong; -- Cannot retrieve focused window
-		EventSummaryPair esPair = Common.esDeposit.findSummary(event, finalResult.sequences);
+		EventSummaryPair esPair = Common.esManager.findSummary(event, finalResult.sequences);
 		GraphicalLayout dest 
 			= finalResult.predefinedUI != null ? finalResult.predefinedUI
 			: Common.model.findOrConstructUI(finalResult.focusedWin.actName, finalResult.node);
