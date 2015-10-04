@@ -3,6 +3,9 @@ package components.system;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
+
+import apex.Configuration;
 import support.CommandLine;
 
 
@@ -60,8 +63,10 @@ public class LogcatReader {
 				if(part == null) continue;
 				if(part.contains(") Method_Starting,") 
 						|| part.contains(") Method_Returning,") 
-						|| part.startsWith(") execLog,")){
-					result.add(part);
+						|| part.contains(") execLog,")){
+					
+					int index = part.indexOf(')');
+					result.add(part.substring(index+2).trim());
 				}
 			}
 			pc.destroy();
@@ -74,22 +79,35 @@ public class LogcatReader {
 	
 	public List<List<String>> extractMethodSequence(List<String> input){
 		List<List<String>> result = new ArrayList<List<String>>();
-		
-		
-		
-		
-		
-		
-		//TODO
-		
-		
-		
-		
-		
-		
-		
-		
-		
+		Stack<String> methodStack = new Stack<String>();
+
+		List<String> currentTrack = new ArrayList<>();
+		for(String line : input){
+			if(line.startsWith("Method_Starting,")){
+				currentTrack.add(line);
+				String content = line.replace("Method_Starting,", "");
+				content = content.substring(0, content.indexOf(')')+1);
+				methodStack.push(content);
+			}else if(line.startsWith("Method_Returning,")){
+				currentTrack.add(line);
+				String content = line.replace("Method_Returning,", "");
+				content = content.substring(0, content.indexOf(')')+1);
+				while(!methodStack.isEmpty()){
+					String poped = methodStack.pop();
+					if(poped.equals(content)){
+						break;
+					}
+				}
+				if(methodStack.isEmpty()){
+					result.add(currentTrack);
+					currentTrack = new ArrayList<>();
+				}
+			}else{
+				currentTrack.add(line);
+			}
+		}
+		if(!currentTrack.isEmpty()) result.add(currentTrack);
+
 		return result;
 	}
 	

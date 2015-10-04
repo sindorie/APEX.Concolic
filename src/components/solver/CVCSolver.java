@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-import components.system.Configuration;
+import apex.Configuration;
 
 public class CVCSolver {
 	static String command = Configuration.getValue(Configuration.attCVC4);		

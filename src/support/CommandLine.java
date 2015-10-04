@@ -5,7 +5,7 @@ import java.io.InputStream;
 import java.util.Scanner;
 import java.util.Stack;
 
-import components.system.Configuration;
+import apex.Configuration;
 
 public class CommandLine {
 	public static boolean DEBUG = true;

@@ -18,7 +18,7 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import components.system.Configuration;
+import apex.Configuration;
 import support.Logger;
 import support.TreeUtility;
 import support.TreeUtility.Searcher;
