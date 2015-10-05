@@ -77,7 +77,7 @@ public class ViewDeviceInfo {
 		        procRunner = getAdbRunner(serial,
 		                "pull", remoteFileName, xmlDumpFile.getAbsolutePath());
 		        retCode = procRunner.run(waitTime);
-		        System.out.println(procRunner.mOutput);
+//		        System.out.println(procRunner.mOutput);
 		        
 		        LayoutNode result =  buildTree(xmlDumpFile);
 		        xmlDumpFile.delete();
@@ -122,7 +122,7 @@ public class ViewDeviceInfo {
                     mWorkingNode = new LayoutNode(windowName);
                     for (int i = 0; i < attributes.getLength(); i++) {
                     	mWorkingNode.addAtrribute(attributes.getQName(i), attributes.getValue(i));
-                    	System.out.println(attributes.getQName(i)+" - "+attributes.getValue(i));
+//                    	System.out.println(attributes.getQName(i)+" - "+attributes.getValue(i));
                     }
                     nodeCreated = true;
                 } else if ("node".equals(qName)) {

@@ -23,6 +23,8 @@ public class ExuectionDriver {
 	
 	
 	 void prepare(){
+		 this.eExecution.reinstall();
+		 
 		 String pkgName = Common.app.getPackageName();
 		 String actName = Common.app.getMainActivity().getJavaName();
 		 newEventList.add(EventFactory.createLaunchEvent(
@@ -37,7 +39,7 @@ public class ExuectionDriver {
 		Event event = null;
 		EventSummaryPair validationCandidate = null;
 		if(!newEventList.isEmpty()){
-			event = newEventList.get(0);
+			event = newEventList.remove(0);
 			if(Common.DEBUG){System.out.println("New Event: "+event.toString());}
 			if(!event.getSource().equals(this.currentUI)){
 				if(eExecution.reposition(currentUI, event.getSource())){

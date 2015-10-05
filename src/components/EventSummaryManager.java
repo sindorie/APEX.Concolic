@@ -229,9 +229,19 @@ public class EventSummaryManager implements Serializable{
 			esList =  secondary.get(0);
 		}else esList =  secondary.get(actualLogs.size());
 		
-		for(EventSummaryPair es : esList){
-			if(es.getPathSummary().matchesExecutionLog((ArrayList<String>)actualLogs)){
-				return es;
+		if(esList == null) return null;
+		
+		if(actualLogs == null){
+			for(EventSummaryPair es : esList){
+				if(es.getPathSummary() == null){
+					return es;
+				}
+			}
+		}else{
+			for(EventSummaryPair es : esList){
+				if(es.getPathSummary().matchesExecutionLog((ArrayList<String>)actualLogs)){
+					return es;
+				}
 			}
 		}
 		return null;

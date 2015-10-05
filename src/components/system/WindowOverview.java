@@ -6,7 +6,6 @@ import java.util.List;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeNode;
 
-import support.Logger;
 import support.TreeUtility;
 import support.TreeUtility.Searcher;
 
@@ -61,15 +60,15 @@ public class WindowOverview {
 		});
 		visibleWins = workSpace;
 		for(WindowInformation winInfo : visibleWins){
-			Logger.trace("identifier: "+winInfo.identifier);
+//			Logger.trace("identifier: "+winInfo.identifier);
 			if(winInfo.identifier.equals(mCurrentFocus)){
 				focusedWindow = winInfo;
 				break;
 			}
 		}
 
-		Logger.trace("mCurrentFocus: "+mCurrentFocus);
-		Logger.trace("focusedWindow: "+focusedWindow);
+//		Logger.trace("mCurrentFocus: "+mCurrentFocus);
+//		Logger.trace("focusedWindow: "+focusedWindow);
 	}
 	
 	/**

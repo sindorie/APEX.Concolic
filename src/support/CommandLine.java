@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.Scanner;
 import java.util.Stack;
 
+import apex.Common;
 import apex.Configuration;
 
 public class CommandLine {
@@ -57,7 +58,7 @@ public class CommandLine {
 	}
 
 	public static int executeCommand(String command , int timeout_ms){
-		
+		if(Common.DEBUG) System.out.println(command);
 		Process task = null;
 		InputStream stderrStream = null, stdoutStream = null;
 		clear();

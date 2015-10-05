@@ -90,53 +90,6 @@ public class LayoutNode extends DefaultMutableTreeNode{
 		return parent;
 	}
 	
-//	public double caculateDistance(LayoutNode other){
-//		return caculateHelper(other , 0);
-//	}
-//
-//	private double caculateHelper(LayoutNode other, int depth){
-//		double baseDifference = localComparison(other);
-//		double ratio = 1;
-//		//local comparison
-//		
-//		//childComparison
-//		
-//		if(other == null){
-//			double childDiffTotal = 0;
-//			for(int i =0;i<this.getChildCount();i++){
-//				LayoutNode child = this.getChildAt(i);
-//				childDiffTotal = child.caculateHelper(null, depth+1);
-//			}
-//			return baseDifference+childDiffTotal*ratio;
-//		}else if(this.getChildCount() > 0){
-//			//there is child node
-//			double childDiffTotal = 0;
-//			int[] childStatus = new int[Math.max(this.getChildCount(), other.getChildCount())];
-//			
-//			
-//			
-//			
-//			return baseDifference+childDiffTotal*ratio;
-//		}else{
-//			double childDiffTotal = 0;
-//			for(int i =0;i<other.getChildCount();i++){
-//				LayoutNode child = other.getChildAt(i);
-//				childDiffTotal = child.caculateHelper(null, depth+1);
-//			}
-//			return baseDifference+childDiffTotal*ratio;
-//		}
-//	}
-//	
-//	private int localComparison(LayoutNode other){
-//		if(other == null) return 3;
-//		int diff = 0;
-//		if(!this.className.equals(other.className)){ diff += 1; }
-//		if(!this.id.equals(other.id)){ diff += 1;}
-//		if(this.clickable != other.clickable){ diff += 1; }
-//		return diff;
-//	}
-	
-	
 	
 	/**
 	 * The two node is considered equal if

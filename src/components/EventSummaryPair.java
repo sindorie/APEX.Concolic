@@ -64,7 +64,12 @@ public class EventSummaryPair extends DefaultEdge implements Serializable{
 		if( o instanceof EventSummaryPair){
 			EventSummaryPair other = (EventSummaryPair)o;
 			if(!this.event.equals(other.event)) return false;
-			return this.summary.getExecutionLog().equals(other.summary.getExecutionLog());
+			if(this.summary == null){
+				return other.summary == null;
+			}else{
+				if(other.summary == null) return false;
+				return this.summary.getExecutionLog().equals(other.summary.getExecutionLog());
+			}
 		}	
 		return false;
 	}
