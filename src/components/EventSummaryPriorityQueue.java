@@ -67,24 +67,24 @@ public class EventSummaryPriorityQueue implements Serializable{
 		return esPair;
 	}
 	
-	public void remove(EventSummaryPair esPair){
-		Integer level = -new Integer(ESPriority.calculate(esPair));
-		if(map.containsKey(level)){
-			List<EventSummaryPair> sumList = map.get(level);
-			sumList.remove(esPair);
-			
-			if(sumList.isEmpty()){
-				map.remove(level);
-				queue.remove(level);
-			}
-		}
-	}
+//	public void remove(EventSummaryPair esPair){
+//		Integer level = -new Integer(ESPriority.calculate(esPair));
+//		if(map.containsKey(level)){
+//			List<EventSummaryPair> sumList = map.get(level);
+//			sumList.remove(esPair);
+//			
+//			if(sumList.isEmpty()){
+//				map.remove(level);
+//				queue.remove(level);
+//			}
+//		}
+//	}
 	
-	public void removeAll(Collection<EventSummaryPair> toRemove){
-		for(EventSummaryPair esPair : toRemove){
-			this.remove(esPair);
-		}
-	}
+//	public void removeAll(Collection<EventSummaryPair> toRemove){
+//		for(EventSummaryPair esPair : toRemove){
+//			this.remove(esPair);
+//		}
+//	}
 	public void addAll(Collection<EventSummaryPair> toRemove){
 		for(EventSummaryPair esPair : toRemove){
 			this.add(esPair);

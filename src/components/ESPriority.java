@@ -19,8 +19,8 @@ public class ESPriority implements Comparator<EventSummaryPair>, Serializable{
 		int tryCount = esPair.getValidationCount();
 		int symCount = esPair.getPathSummary().getSymbolicStates().size();
 		int conCount = esPair.getPathSummary().getPathConditions().size();
-		int distence = Common.model.findSequence(GraphicalLayout.Launcher, 
-				esPair.getSource()).size(); //-- this change over time cannot control well.
+		int distence = Common.model!=null ? Common.model.findSequence(GraphicalLayout.Launcher, 
+				esPair.getSource()).size() : 0; //-- this change over time cannot control well.
 		int targets = esPair.getTargetLines() == null? 0 : esPair.getTargetLines().size();
 		
 		return -tryCount + symCount - conCount - distence + targets; //
