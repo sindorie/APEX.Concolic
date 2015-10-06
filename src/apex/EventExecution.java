@@ -89,16 +89,9 @@ public class EventExecution {
 		boolean keyboardVisible = wInfo.isKeyboardVisible();
 		if (keyboardVisible) {ex.applyEvent(closeKeyboard);}
 		WindowInformation focusedWin = wInfo.getFocusedWindow();
-		int count = 0;
 		while(focusedWin == null){
-			if(count > 3){
-				System.out.println("Fail to retrieve layout");
-				return null;
-			}
-			try { Thread.sleep(20); } catch (InterruptedException e1) { }
-			focusedWin = sysInfo.getWindowOverview().getFocusedWindow();
-			count += 1;
-		}	
+			focusedWin = wInfo.getFocusedWindow();
+		}
 		
 		LayoutNode node = null;
 		int scope = focusedWin.isWithinApplciation(app);
@@ -113,6 +106,7 @@ public class EventExecution {
 		result.scope = scope;
 		result.iInfo = iInfo;
 		result.wInfo = wInfo;
+		result.focusedWin = focusedWin;
 		result.keyboardVisible = keyboardVisible;
 		result.sequences = sequences;
 		result.log = lines;

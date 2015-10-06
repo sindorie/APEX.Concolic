@@ -7,9 +7,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.swing.JFrame;
 import javax.swing.tree.TreeNode;
 
+import org.jgraph.JGraph;
 import org.jgrapht.alg.DijkstraShortestPath;
+import org.jgrapht.ext.JGraphModelAdapter;
 import org.jgrapht.graph.ListenableDirectedGraph;
 
 import support.TreeUtility;
@@ -40,12 +43,17 @@ public class UIModel {
 		knownSequence = new HashMap<GraphicalLayout, List<EventSummaryPair>>();
 		allKnownEdges = new ArrayList<EventSummaryPair>();
 		
-		this.addUI(GraphicalLayout.Launcher);
+		List<GraphicalLayout> list = new ArrayList<GraphicalLayout>();
+		list.add(GraphicalLayout.Launcher);
+		this.nameToUI.put(GraphicalLayout.Launcher.getActName(), list);
 		graph.addVertex(GraphicalLayout.Launcher);
 	}
 	
 	public List<Event> update(EventSummaryPair esPair, EventExecutionResult exeResult){
 		Common.TRACE();
+		if(Common.DEBUG){
+			System.out.println(esPair);
+		}
 		allKnownEdges.add(esPair);
 		if(esPair.getSource() == esPair.getTarget()){
 			List<EventSummaryPair> list = vertex_to_loopEdges.get(esPair.getSource());
@@ -87,6 +95,8 @@ public class UIModel {
 			nameToUI.put(actName, list);
 			GraphicalLayout newLayout = new GraphicalLayout(actName, node);
 			list.add(newLayout);
+			this.graph.addVertex(newLayout);
+			createNewEvent(newLayout);
 			return newLayout;
 		}else{
 			for(GraphicalLayout ui : list){
@@ -96,6 +106,8 @@ public class UIModel {
 			}
 			GraphicalLayout newLayout = new GraphicalLayout(actName, node);
 			list.add(newLayout);
+			this.graph.addVertex(newLayout);
+			createNewEvent(newLayout);
 			return newLayout;
 		}
 	}
@@ -138,18 +150,20 @@ public class UIModel {
 		return DijkstraShortestPath.findPathBetween(graph, source, target);
 	}
 	
-	List<EventSummaryPair> findKownSequence(GraphicalLayout target){
+	public List<EventSummaryPair> findKownSequence(GraphicalLayout target){
 		List<EventSummaryPair> list = knownSequence.get(target);
 		return list;
 	}
 	
-	private void addUI(GraphicalLayout g){
-		List<GraphicalLayout> list = this.nameToUI.get(g.getActName());
-		if(list == null){
-			list = new ArrayList<GraphicalLayout>();
-			this.nameToUI.put(g.getActName(), list);
-		}
-		list.add(g);
+	public void showGUI(){
+		JGraphModelAdapter<GraphicalLayout, EventSummaryPair> adapter = new JGraphModelAdapter<GraphicalLayout, EventSummaryPair>(graph);
+		JGraph jgraph = new JGraph(adapter);
+		jgraph.setEditable(false);
+		
+		JFrame frame = new JFrame();
+		frame.getContentPane().add(jgraph);
+		frame.setSize(800, 600);
+		frame.setVisible(true);
 	}
 	
 	void createNewEvent(GraphicalLayout layout){
@@ -157,10 +171,8 @@ public class UIModel {
 		TreeUtility.breathFristSearch(layout.getRootNode(), new Searcher(){
 			@Override
 			public int check(TreeNode treeNode) {
-//				if(treeNode == null){ UIUtility.showTree(treeNode); }
 				if(treeNode == null) return Searcher.NORMAL;
 				LayoutNode node = (LayoutNode)treeNode;
-//				generateEventOnNode(toAdd, layout, node);
 				if(node.isLeaf()){
 					if(node.clickable){ 
 						Event next = EventFactory.createClickEvent(layout, node);

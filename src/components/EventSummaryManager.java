@@ -6,10 +6,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import apex.Common;
 import apex.staticFamily.StaticMethod;
 import apex.symbolic.PathSummary;
+import apex.symbolic.ToDoPath;
 
 public class EventSummaryManager implements Serializable{
 	
@@ -28,6 +30,29 @@ public class EventSummaryManager implements Serializable{
 	
 	EventSummaryPriorityQueue queue = new EventSummaryPriorityQueue();
 	
+	
+	public List<EventSummaryPair> getAllSymbolicSegmentalSummary(){
+		return showData(segmentalStorage_symbolic);
+	}
+	public List<EventSummaryPair> getAllConcreteSegmentalSummary(){
+		return showData(segmentalStorage_concrete);
+	}
+	public List<EventSummaryPair> getAllConcreteSummary(){
+		return showData(concreteStorage);
+	}
+	private List<EventSummaryPair> showData(Map<Event,Map<String, Map<Integer, List<EventSummaryPair>>>> storage){
+		List<EventSummaryPair> result = new ArrayList<>();
+		for(Entry<Event, Map<String, Map<Integer, List<EventSummaryPair>>>> entry : storage.entrySet()){
+			for(Entry<String, Map<Integer, List<EventSummaryPair>>> entry1 : entry.getValue().entrySet()){
+				for(Entry<Integer, List<EventSummaryPair>> entry2 : entry1.getValue().entrySet()){
+					List<EventSummaryPair> sums = entry2.getValue();
+					if(sums != null) result.addAll(sums);
+				}
+			}
+		}
+		return result;
+	}
+	
 	/**
 	 * find or construct the event summary pair, do the symbolic execution if 
 	 * necessary
@@ -35,7 +60,7 @@ public class EventSummaryManager implements Serializable{
 	 * 'logs' contains a list of string list. the element string list is an exec  
 	 * log for a method previous extracted from the logcat. Therefore the 'logs'  
 	 * are a list of exec log for a list of methods. 
-	 * 
+	 * 	
 	 * All the event summary pairs for validation are segmental (by contrast, a 
 	 * concrete execution log might match multiple segmental summary in order as
 	 * there could be more than one method in parallel called. 
@@ -47,77 +72,107 @@ public class EventSummaryManager implements Serializable{
 	 */
 	public EventSummaryPair findSummary(Event event, List<List<String>> separetedLogs){
 		Common.TRACE();
-		//check if the path 	
-		List<String> combined = new ArrayList<String>();
-		for(List<String> log : separetedLogs){ combined.addAll(log);}
 		
+		List<List<String>> expandedList = null;
+		List<String> signatures = null;
+		List<String> combined = null;
+		if(separetedLogs != null && !separetedLogs.isEmpty()){
+			expandedList = new ArrayList<>();
+			combined = new ArrayList<String>();
+			signatures = new ArrayList<String>();
+			for(List<String> log : separetedLogs){ 
+				signatures.add(this.extractMethodSig(log.get(0)));
+				ToDoPath tdp = Common.symbolic.expandLogcatOutput((ArrayList<String>)log);
+				List<String> expanded = tdp.getExecutionLog();
+				expandedList.add(expanded);
+				combined.addAll(expanded);
+			}
+		}
 		EventSummaryPair esp = get_internal(event, combined, concreteStorage);
 		if(esp != null) return esp;
-			
 		if(separetedLogs == null || separetedLogs.isEmpty()){
 			EventSummaryPair result = new EventSummaryPair(event, null);
 			put_internal(result, concreteStorage);
+			result.setExecuted(true);
 			return result;
 		}
 		
 		//for each segmental method, check records or do symbolic execution
 		List<PathSummary> pList = new ArrayList<PathSummary>();
-		for(List<String> log : separetedLogs){
-			EventSummaryPair seg = get_internal(event, log, segmentalStorage_concrete);
-			if(seg != null){ // an event summary pair concreted executed before
-				PathSummary pSum = seg.getPathSummary();
+		for(int log_index =0 ; log_index< expandedList.size() ; log_index++){
+			List<String> expandedLog = expandedList.get(log_index);
+			List<String> rawLogcat = separetedLogs.get(log_index);
+			String signature = signatures.get(log_index);
+			
+			Common.TRACE();
+			if(Common.DEBUG){
+				for(String line: expandedLog){
+					System.out.println(line);
+				}
+			}
+			
+			EventSummaryPair segESPair = get_internal(event, expandedLog, segmentalStorage_concrete);
+			if(segESPair != null){ // an event summary pair concreted executed before
+				PathSummary pSum = segESPair.getPathSummary();
 				pList.add(pSum);
 				continue;
-			}else if( (seg = remove_internal(event, log, segmentalStorage_symbolic)) != null ){
+			}else if( (segESPair = remove_internal(event, expandedLog, segmentalStorage_symbolic)) != null ){
 				//find in the symbolic one -- previously generated
-				put_internal(seg, segmentalStorage_concrete);
-				seg.setExecuted(true);
-				pList.add(seg.getPathSummary());
+				put_internal(segESPair, segmentalStorage_concrete);
+				segESPair.setExecuted(true);
+				pList.add(segESPair.getPathSummary());
 			}else{ // the event summary pair list is not generated yet
-				String first = log.get(0); 
-				List<PathSummary> sumList = sumMap.get(first);
+				List<PathSummary> sumList = sumMap.get(signature);
 				if(sumList == null){ //do symbolic execution
-					StaticMethod found = findMethod(first);
+					StaticMethod found = findMethod(signature);
 					if(found == null) continue;
 					Common.TRACE();
 					sumList = Common.symbolic.doFullSymbolic(found);
-					Common.TRACE(sumList.size()+"");
-					System.out.println(sumList.get(0).getExecutionLog());
-					System.out.println(sumList.get(0).getBranchExecutionLog());
-					
-					sumMap.put(first, sumList);
+					Common.TRACE( (sumList!=null?sumList.size():0)+"");
+					sumMap.put(signature, sumList);
 				}
 				if(sumList == null || sumList.isEmpty()) continue;
 
 				Common.TRACE();
-				//int logSize = log.size();
 				PathSummary matched = null;
-				for(int i = 0 ; i< sumList.size(); i++){
-					PathSummary sum = sumList.get(i);
-					if(	    //logSize == sum.getBranchExecutionLog().size() &&
-							sum.matchesExecutionLog((ArrayList<String>)log) ){
-						if(matched != null){
-							System.out.println("Matched moce than once"); 
+				for(int sum_index = 0 ; sum_index< sumList.size(); sum_index++){
+					PathSummary sum = sumList.get(sum_index);
+					
+					Common.TRACE();
+					if(Common.DEBUG){
+						for(String line: sum.getExecutionLog()){
+							System.out.println(line);
+						}
+					}
+					if(	sum.getExecutionLog().size() == expandedLog.size() && sum.getExecutionLog().equals(expandedLog)){
+						if(matched == null){
 							matched = sum;
 							EventSummaryPair pair = setTargetLines(new EventSummaryPair(event.clone(), sum, true));
 							this.put_internal( pair , segmentalStorage_concrete);
-							queue.add(pair);
-						}else{	
-							this.put_internal(
-									setTargetLines(new EventSummaryPair(event.clone(), sum))
-									, segmentalStorage_symbolic);
+						}else{
+							System.out.println("Matched moce than once"); //should not happen
 						}
+					}else{
+						EventSummaryPair pair = setTargetLines(new EventSummaryPair(event.clone(), sum));
+						this.put_internal( pair , segmentalStorage_symbolic);
+						queue.add(pair);
 					}
 				}
 				if(matched == null){
 					Common.TRACE();
 					if(Common.DEBUG){
-						for(String line : log){
+						for(String line : expandedLog){
 							System.out.println(line);
-						}
+						}	
 					}
-					matched = Common.symbolic.doFullSymbolic((ArrayList<String>)log);}
-				if(matched != null) pList.add(matched);
+					Common.TRACE("Symbolic execution by logcat out");
+					matched = Common.symbolic.doFullSymbolic((ArrayList<String>)rawLogcat);
+				}
+				if(matched != null){
+					pList.add(matched);
+				}else{
+					System.out.println("Matching failure");
+				}
 				Common.TRACE();
 			}
 		}
@@ -200,57 +255,66 @@ public class EventSummaryManager implements Serializable{
 		return esPair;
 	}
 
-	EventSummaryPair remove_internal(Event event, List<String> actualLogs,			
+	EventSummaryPair remove_internal(Event event, List<String> expandedLog,			
 			Map<Event,Map<String, Map<Integer, List<EventSummaryPair>>>> storage){
 		Common.TRACE();
 		Map<String, Map<Integer, List<EventSummaryPair>>> primary = storage.get(event);
 		if(primary == null) return null;
 		
-		String firstLine = null;
-		if(actualLogs == null || actualLogs.isEmpty()) { firstLine = "";
-		}else{ firstLine = actualLogs.get(0); }
+		String methodSig = null;
+		if(expandedLog == null || expandedLog.isEmpty()) { methodSig = "";
+		}else{ methodSig = extractMethodSig(expandedLog.get(0)); }
 		
-		Map<Integer, List<EventSummaryPair>> secondary = primary.get(firstLine);
+		Map<Integer, List<EventSummaryPair>> secondary = primary.get(methodSig);
 		if(secondary == null) return null;
 		
 		List<EventSummaryPair> esList = null;
-		if(actualLogs == null || actualLogs.isEmpty()){
+		if(expandedLog == null || expandedLog.isEmpty()){
 			esList =  secondary.get(0);
-		}else esList =  secondary.get(actualLogs.size());
+		}else esList =  secondary.get(expandedLog.size());
+		if(esList == null) return null; //did not find
 		
-		EventSummaryPair result = null;
-		int i=0;
-		for(;i<esList.size() ; i++){
-			EventSummaryPair es = esList.get(i);
-			if(es.getPathSummary().matchesExecutionLog((ArrayList<String>)actualLogs)){
-				result = es; break;
+		if(expandedLog == null || expandedLog.isEmpty()){
+			if(esList.size() > 0 ){
+				return esList.remove(0); //event-pathsummary(null) can only has one candidate --should not happen
+			}else{ return null; }
+		}else{
+			EventSummaryPair result = null;
+			int i=0;
+			for(;i<esList.size() ; i++){
+				EventSummaryPair es = esList.get(i);
+				PathSummary sum = es.getPathSummary();
+				if(sum == null) continue;
+				if( sum.getExecutionLog().size() == expandedLog.size() &&
+						sum.getExecutionLog().equals(expandedLog)){
+					result = es; break;
+				}
 			}
+			if(result != null) esList.remove(i);	
+			return result;
 		}
-		esList.remove(i);	
-		return result;
 	}
 	
-	EventSummaryPair get_internal(Event event, List<String> actualLogs, 
+	EventSummaryPair get_internal(Event event, List<String> expandedLog, 
 			Map<Event,Map<String, Map<Integer, List<EventSummaryPair>>>> storage){
 		Common.TRACE();
 		Map<String, Map<Integer, List<EventSummaryPair>>> primary = storage.get(event);
 		if(primary == null) return null;
 		
-		String firstLine = null;
-		if(actualLogs == null || actualLogs.isEmpty()) { firstLine = "";
-		}else{ firstLine = actualLogs.get(0); }
+		String methodSig = null;
+		if(expandedLog == null || expandedLog.isEmpty()) { methodSig = "";
+		}else{ methodSig = extractMethodSig(expandedLog.get(0)); }
 		
-		Map<Integer, List<EventSummaryPair>> secondary = primary.get(firstLine);
+		Map<Integer, List<EventSummaryPair>> secondary = primary.get(methodSig);
 		if(secondary == null) return null;
 		
 		List<EventSummaryPair> esList = null;
-		if(actualLogs == null || actualLogs.isEmpty()){
+		if(expandedLog == null || expandedLog.isEmpty()){
 			esList =  secondary.get(0);
-		}else esList =  secondary.get(actualLogs.size());
-		
+		}else esList =  secondary.get(expandedLog.size());
 		if(esList == null) return null;
 		
-		if(actualLogs == null){
+		if(expandedLog == null){
 			for(EventSummaryPair es : esList){
 				if(es.getPathSummary() == null){
 					return es;
@@ -258,7 +322,10 @@ public class EventSummaryManager implements Serializable{
 			}
 		}else{
 			for(EventSummaryPair es : esList){
-				if(es.getPathSummary().matchesExecutionLog((ArrayList<String>)actualLogs)){
+				PathSummary sum = es.getPathSummary();
+				if(sum == null) continue;//should not happen
+				if( sum.getExecutionLog().size() == expandedLog.size() &&
+						sum.getExecutionLog().equals(expandedLog) ){
 					return es;
 				}
 			}
@@ -268,28 +335,35 @@ public class EventSummaryManager implements Serializable{
 	
 	void put_internal(EventSummaryPair esPair,
 			Map<Event,Map<String, Map<Integer, List<EventSummaryPair>>>> storage){ //assume it does not exist
-
+		
 		Common.TRACE();
 		PathSummary path = esPair.getPathSummary();
 		Event event = esPair.getEvent();
-		List<String> logs = path== null ? null : path.getBranchExecutionLog();
+		List<String> logs = ((path== null) ? null : path.getExecutionLog());
 		
 		Map<String, Map<Integer, List<EventSummaryPair>>> primary = storage.get(event);
 		if(primary == null){ 
 			primary = new HashMap<String, Map<Integer, List<EventSummaryPair>>>(); 
 			storage.put(event, primary);
 		}
-		String firstLine = (logs == null || logs.isEmpty()) ? "" : logs.get(0);
-		Map<Integer, List<EventSummaryPair>> secondary = primary.get(firstLine);
+		String methodSig =  ((path!= null) ? path.getMethodSignature() : ""); 
+		Map<Integer, List<EventSummaryPair>> secondary = primary.get(methodSig);
 		if(secondary == null){
 			secondary = new HashMap<Integer, List<EventSummaryPair>>();
-			primary.put(firstLine, secondary);
+			primary.put(methodSig, secondary);
 		}
 		int size = (logs == null) ? 0 : logs.size();
 		List<EventSummaryPair> esList = secondary.get(size);
-		
-		if(esList == null){ esList = new ArrayList<EventSummaryPair>(); }
-		esList.add(esPair);
+		if(esList == null){ 
+			esList = new ArrayList<EventSummaryPair>(); 
+			secondary.put(size, esList);
+		}
+		esList.add(esPair); //does not check due to assumption
+	}
+	
+	
+	String extractMethodSig(String line){
+		return line.replace("Method_Starting,", "").trim();
 	}
 	
 	StaticMethod findMethod(String line){

@@ -76,7 +76,7 @@ public class EventSummaryPair extends DefaultEdge implements Serializable{
 	
 	@Override 
 	public String toString(){
-		return this.event.toString()+"_"+summary==null?"null":summary.getExecutionLog().get(0);
+		return this.event.toString()+"_"+ ((summary==null)?"null":summary.getExecutionLog().get(0))+"_"+this.target+"_"+this.isExecuted;
 	}
 	
 	@Override

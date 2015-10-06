@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import components.EventSummaryManager;
+import components.EventSummaryPair;
 import apex.staticFamily.StaticAppBuilder;
 import apex.symbolic.SymbolicExecution;
 
@@ -12,6 +13,7 @@ public class IncrementalProcedure {
 	long startTime;
 	boolean checkPrevious = false;
 	int iterationCount = 0;
+	boolean enableDefaultStatistic = true;
 	
 	public IncrementalProcedure(String apkPath, Iterable<String> targets, String serial){
 		Common.apkPath = apkPath;
@@ -40,11 +42,27 @@ public class IncrementalProcedure {
 	void loop(){
 		startTime = System.currentTimeMillis();
 		while(  !isAllreached() && !isLimitReached()  ){
-			driver.kick();
+			boolean status = driver.kick();
 			iterationCount += 1;
+			if(status == false) break;
 		}
 	}
-	void postLoop(){ }
+	void statistic(){ 
+		Common.model.showGUI();
+		System.out.println("Total edges: "+Common.model.getAllEdges().size());
+		System.out.println("ConcreteSegmentalSummary");
+		for(EventSummaryPair esPair : Common.esManager.getAllConcreteSegmentalSummary()){
+			System.out.println(esPair);
+		}
+		System.out.println("SymbolicSegmentalSummary");
+		for(EventSummaryPair esPair : Common.esManager.getAllSymbolicSegmentalSummary()){
+			System.out.println(esPair);
+		}
+		System.out.println("ConcreteSummary");
+		for(EventSummaryPair esPair : Common.esManager.getAllConcreteSummary()){
+			System.out.println(esPair);
+		}
+	}
 	boolean isLimitReached(){
 		return iterationCount > 0xFFFF;
 	}
@@ -65,7 +83,7 @@ public class IncrementalProcedure {
 			}catch(Exception e){
 				e.printStackTrace();
 			}
-			postLoop();
+			if(enableDefaultStatistic)statistic();
 		}
 	}
 }

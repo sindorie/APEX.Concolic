@@ -24,7 +24,6 @@ public class ExuectionDriver {
 	
 	 void prepare(){
 		 this.eExecution.reinstall();
-		 
 		 String pkgName = Common.app.getPackageName();
 		 String actName = Common.app.getMainActivity().getJavaName();
 		 newEventList.add(EventFactory.createLaunchEvent(
@@ -35,7 +34,7 @@ public class ExuectionDriver {
 	 * drive the execution
 	 * @return if should 
 	 */
-	void kick(){
+	boolean kick(){
 		Common.TRACE();
 		Event event = null;
 		EventSummaryPair validationCandidate = null;
@@ -49,15 +48,15 @@ public class ExuectionDriver {
 					eExecution.reinstall();
 					this.currentUI = GraphicalLayout.Launcher;
 					System.out.println("New event reposition failure");
-					return; 
+					return true; 
 				}
 			}
 		}else if( (validationCandidate = summaryManager.next()) != null ){
 			event = validationCandidate.getEvent();
 			if(Common.DEBUG){System.out.println("Validation: "+validationCandidate.toString());}
-			if(validationCandidate.isExecuted()) return; //should not happen
+			if(validationCandidate.isExecuted()) return true; //should not happen
 			List<EventSummaryPair> solvingSequence = Common.esManager.getNextSequence(validationCandidate);
-			if(solvingSequence == null) return;
+			if(solvingSequence == null) return true;
 			eExecution.reinstall();
 			EventExecutionResult midResult = eExecution.doSequence(solvingSequence, true);
 			
@@ -66,14 +65,17 @@ public class ExuectionDriver {
 				: Common.model.findOrConstructUI(midResult.focusedWin.actName, midResult.node);
 			this.currentUI = focuedWin;
 			if(!focuedWin.equals(event.getSource())){
-				return; //failure
+				return true; //failure
 			}
+		}else{
+			System.out.println("Should end");
+			return false;
 		}
 		Common.TRACE();
 		EventExecutionResult finalResult = eExecution.carrayout(event);
 		if(finalResult == null){
 			System.out.println("Final reuslt is null for execution result");
-			return;
+			return true;
 		}//something is wrong; -- Cannot retrieve focused window
 		EventSummaryPair esPair = Common.esManager.findSummary(event, finalResult.sequences);
 		GraphicalLayout dest 
@@ -84,9 +86,13 @@ public class ExuectionDriver {
 		List<Event> newEvents = Common.model.update(esPair, finalResult);
 		if(newEvents != null) newEventList.addAll(newEvents);
 		
+		if(Common.DEBUG){
+			System.out.println(  "new events:"+((newEvents != null)?newEvents.size():0 ));
+		}
 		Common.model.record(esPair);
 		checkTargetReach(finalResult.log);
 		Common.TRACE();
+		return true;
 	}
 	
 	void checkTargetReach(List<String> log){

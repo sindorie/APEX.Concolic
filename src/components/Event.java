@@ -51,7 +51,7 @@ public class Event implements Serializable{
 	public String toString(){
 		String typename = EventFactory.intToString(eventType);
 		String result = "";
-		result = typename+", "+source.toString()+", "+this.attributes.toString(); 
+		result = typename+", "+source+", "+this.attributes; 
 		return result;
 	}
 	

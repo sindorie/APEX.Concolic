@@ -1,5 +1,6 @@
 package components;
 
+import apex.Common;
 import support.CommandLine;
 
 public class EventExecutor { 
@@ -20,6 +21,7 @@ public class EventExecutor {
 	
 	public void applyEvent(Event event, boolean sleep){
 		CommandLine.clear();
+		if(Common.DEBUG) System.out.println(event);
 		int type = event.getEventType();
 		switch(type){
 		case EventFactory.iLAUNCH:{
