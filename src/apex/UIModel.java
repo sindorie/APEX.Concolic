@@ -45,6 +45,7 @@ public class UIModel {
 	}
 	
 	public List<Event> update(EventSummaryPair esPair, EventExecutionResult exeResult){
+		Common.TRACE();
 		allKnownEdges.add(esPair);
 		if(esPair.getSource() == esPair.getTarget()){
 			List<EventSummaryPair> list = vertex_to_loopEdges.get(esPair.getSource());
@@ -133,6 +134,7 @@ public class UIModel {
 	}
 	
 	public List<EventSummaryPair> findSequence(GraphicalLayout source, GraphicalLayout target){
+		if(source == target) return new ArrayList<>();
 		return DijkstraShortestPath.findPathBetween(graph, source, target);
 	}
 	

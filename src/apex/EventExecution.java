@@ -42,6 +42,7 @@ public class EventExecution {
 	}
 	
 	public boolean reposition(GraphicalLayout current, GraphicalLayout target){
+		Common.TRACE();
 		List<EventSummaryPair> repositionSequence = null;
 		{ //try find a pat from current to target
 			repositionSequence = Common.model.findSequence(current, target);
@@ -53,6 +54,7 @@ public class EventExecution {
 				if(target == focuedWin) return true;
 			}
 		}
+		Common.TRACE("Seoncd phase");
 		
 		{ //try to find a known sequence from launcher
 			repositionSequence = Common.model.findKownSequence(target);
@@ -65,10 +67,12 @@ public class EventExecution {
 				if(target == focuedWin) return true;
 			}
 		}
+		Common.TRACE("failure");
 		return false; // failure
 	}
 	
 	EventExecutionResult carrayout(Event event){
+		Common.TRACE();
 		logcatReader.clearLogcat();
 		ex.applyEvent(event);
 		try { Thread.sleep(100);
@@ -117,6 +121,7 @@ public class EventExecution {
 	
 	public EventExecutionResult doSequence(List<EventSummaryPair> eList, boolean check){
 		if(check == false){
+			Common.TRACE();
 			for(int i = 0 ; i<eList.size() ; i++){
 				ex.applyEvent(eList.get(i).getEvent());
 				if( sysInfo.getWindowOverview().isKeyboardVisible() ){
@@ -126,6 +131,7 @@ public class EventExecution {
 			}
 			return null;
 		}else{
+			Common.TRACE();
 			for(int i = 0 ; i<eList.size() -1 ; i++){
 				ex.applyEvent(eList.get(i).getEvent());	
 				if( sysInfo.getWindowOverview().isKeyboardVisible() ){

@@ -42,18 +42,19 @@ public class EventSummaryManager implements Serializable{
 	 * 
 	 * 
 	 * @param event --
-	 * @param logs 
+	 * @param separetedLogs 
 	 * @return
 	 */
-	public EventSummaryPair findSummary(Event event, List<List<String>> logs){
+	public EventSummaryPair findSummary(Event event, List<List<String>> separetedLogs){
+		Common.TRACE();
 		//check if the path 	
 		List<String> combined = new ArrayList<String>();
-		for(List<String> log : logs){ combined.addAll(log);}
+		for(List<String> log : separetedLogs){ combined.addAll(log);}
 		
 		EventSummaryPair esp = get_internal(event, combined, concreteStorage);
 		if(esp != null) return esp;
 			
-		if(logs == null || logs.isEmpty()){
+		if(separetedLogs == null || separetedLogs.isEmpty()){
 			EventSummaryPair result = new EventSummaryPair(event, null);
 			put_internal(result, concreteStorage);
 			return result;
@@ -61,7 +62,7 @@ public class EventSummaryManager implements Serializable{
 		
 		//for each segmental method, check records or do symbolic execution
 		List<PathSummary> pList = new ArrayList<PathSummary>();
-		for(List<String> log : logs){
+		for(List<String> log : separetedLogs){
 			EventSummaryPair seg = get_internal(event, log, segmentalStorage_concrete);
 			if(seg != null){ // an event summary pair concreted executed before
 				PathSummary pSum = seg.getPathSummary();
@@ -78,16 +79,22 @@ public class EventSummaryManager implements Serializable{
 				if(sumList == null){ //do symbolic execution
 					StaticMethod found = findMethod(first);
 					if(found == null) continue;
+					Common.TRACE();
 					sumList = Common.symbolic.doFullSymbolic(found);
+					Common.TRACE(sumList.size()+"");
+					System.out.println(sumList.get(0).getExecutionLog());
+					System.out.println(sumList.get(0).getBranchExecutionLog());
+					
 					sumMap.put(first, sumList);
 				}
 				if(sumList == null || sumList.isEmpty()) continue;
-				
-				int logSize = log.size();
+
+				Common.TRACE();
+				//int logSize = log.size();
 				PathSummary matched = null;
 				for(int i = 0 ; i< sumList.size(); i++){
 					PathSummary sum = sumList.get(i);
-					if(logSize == sum.getBranchExecutionLog().size() &&
+					if(	    //logSize == sum.getBranchExecutionLog().size() &&
 							sum.matchesExecutionLog((ArrayList<String>)log) ){
 						if(matched != null){
 							System.out.println("Matched moce than once"); 
@@ -102,8 +109,16 @@ public class EventSummaryManager implements Serializable{
 						}
 					}
 				}
-				if(matched == null){matched = Common.symbolic.doFullSymbolic((ArrayList<String>)log);}
+				if(matched == null){
+					Common.TRACE();
+					if(Common.DEBUG){
+						for(String line : log){
+							System.out.println(line);
+						}
+					}
+					matched = Common.symbolic.doFullSymbolic((ArrayList<String>)log);}
 				if(matched != null) pList.add(matched);
+				Common.TRACE();
 			}
 		}
 		
@@ -124,6 +139,7 @@ public class EventSummaryManager implements Serializable{
 	 * @return
 	 */
 	public EventSummaryPair next(){
+		Common.TRACE();
 		while(!queue.isEmpty()){
 			if(!queue.peek().isExecuted()){
 				EventSummaryPair result = queue.poll();
@@ -145,6 +161,7 @@ public class EventSummaryManager implements Serializable{
 	}
 	
 	public List<EventSummaryPair> getNextSequence(EventSummaryPair esPair){
+		Common.TRACE();
 		Sequence seq = summaryToSequence.get(esPair);
 		if(seq == null){
 			AnchorSolver solve = new AnchorSolver();
@@ -185,6 +202,7 @@ public class EventSummaryManager implements Serializable{
 
 	EventSummaryPair remove_internal(Event event, List<String> actualLogs,			
 			Map<Event,Map<String, Map<Integer, List<EventSummaryPair>>>> storage){
+		Common.TRACE();
 		Map<String, Map<Integer, List<EventSummaryPair>>> primary = storage.get(event);
 		if(primary == null) return null;
 		
@@ -214,6 +232,7 @@ public class EventSummaryManager implements Serializable{
 	
 	EventSummaryPair get_internal(Event event, List<String> actualLogs, 
 			Map<Event,Map<String, Map<Integer, List<EventSummaryPair>>>> storage){
+		Common.TRACE();
 		Map<String, Map<Integer, List<EventSummaryPair>>> primary = storage.get(event);
 		if(primary == null) return null;
 		
@@ -249,7 +268,8 @@ public class EventSummaryManager implements Serializable{
 	
 	void put_internal(EventSummaryPair esPair,
 			Map<Event,Map<String, Map<Integer, List<EventSummaryPair>>>> storage){ //assume it does not exist
-		
+
+		Common.TRACE();
 		PathSummary path = esPair.getPathSummary();
 		Event event = esPair.getEvent();
 		List<String> logs = path== null ? null : path.getBranchExecutionLog();

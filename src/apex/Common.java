@@ -23,4 +23,26 @@ public class Common {
 	
 	public static StaticApp app;
 	public static boolean DEBUG = true;
+	
+	public static void TRACE(){
+		if(DEBUG){
+			StackTraceElement[] info = Thread.currentThread().getStackTrace();
+			StackTraceElement element = info[2];
+			String context = element.getClassName()+" "+element.getMethodName()+" "+element.getLineNumber();
+			System.out.println(context);
+		}
+	}
+	
+	public static void TRACE(String msg){
+		if(DEBUG){
+			StackTraceElement[] info = Thread.currentThread().getStackTrace();
+			StackTraceElement element = info[2];
+			String context = element.getClassName()+" "+element.getMethodName()+" "+element.getLineNumber();
+			if(msg != null){
+				System.out.println(context+" "+msg);
+			}else{
+				System.out.println(context);
+			}
+		}
+	}
 }

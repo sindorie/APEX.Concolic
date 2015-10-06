@@ -36,6 +36,7 @@ public class ExuectionDriver {
 	 * @return if should 
 	 */
 	void kick(){
+		Common.TRACE();
 		Event event = null;
 		EventSummaryPair validationCandidate = null;
 		if(!newEventList.isEmpty()){
@@ -68,7 +69,7 @@ public class ExuectionDriver {
 				return; //failure
 			}
 		}
-		
+		Common.TRACE();
 		EventExecutionResult finalResult = eExecution.carrayout(event);
 		if(finalResult == null){
 			System.out.println("Final reuslt is null for execution result");
@@ -85,6 +86,7 @@ public class ExuectionDriver {
 		
 		Common.model.record(esPair);
 		checkTargetReach(finalResult.log);
+		Common.TRACE();
 	}
 	
 	void checkTargetReach(List<String> log){
