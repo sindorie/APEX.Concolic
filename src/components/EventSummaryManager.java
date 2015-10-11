@@ -17,6 +17,9 @@ public class EventSummaryManager implements Serializable{
 	
 	Map<String, List<PathSummary>> sumMap = new HashMap<String,List<PathSummary>>();
 	
+	Map<Event,Map<String, Map<Integer, List<EventSummaryPair>>>> segmentalStorage_invalid = 
+			new HashMap<Event,Map<String, Map<Integer, List<EventSummaryPair>>>>();
+	
 	Map<Event,Map<String, Map<Integer, List<EventSummaryPair>>>> segmentalStorage_symbolic = 
 			new HashMap<Event,Map<String, Map<Integer, List<EventSummaryPair>>>>();
 	
@@ -30,7 +33,16 @@ public class EventSummaryManager implements Serializable{
 	
 	EventSummaryPriorityQueue queue = new EventSummaryPriorityQueue();
 	
+	AnchorSolver solver = new AnchorSolver();
 	
+	final static int maxValidationCount = 1;
+
+	public List<EventSummaryPair> getRemainingInQueue(){
+		return this.queue.getRemaining();
+	}
+	public List<EventSummaryPair> getAllInvalidSegmentalSummary(){
+		return this.showData(segmentalStorage_invalid);
+	}
 	public List<EventSummaryPair> getAllSymbolicSegmentalSummary(){
 		return showData(segmentalStorage_symbolic);
 	}
@@ -117,6 +129,10 @@ public class EventSummaryManager implements Serializable{
 				PathSummary pSum = segESPair.getPathSummary();
 				pList.add(pSum);
 				continue;
+			}else if( (segESPair = remove_internal(event, expandedLog, signature, segmentalStorage_invalid)) != null ){
+				put_internal(segESPair, segmentalStorage_concrete);
+				segESPair.setExecuted(true);
+				pList.add(segESPair.getPathSummary());
 			}else if( (segESPair = remove_internal(event, expandedLog, signature, segmentalStorage_symbolic)) != null ){
 				//find in the symbolic one -- previously generated
 				put_internal(segESPair, segmentalStorage_concrete);
@@ -132,7 +148,7 @@ public class EventSummaryManager implements Serializable{
 					}
 //					Common.TRACE();
 					sumList = Common.symbolic.doFullSymbolic(found);
-//					Common.TRACE( (sumList!=null?sumList.size():0)+"");
+					Common.TRACE( (sumList!=null?sumList.size():0)+"");
 					sumMap.put(signature, sumList);
 				}
 				if(sumList == null || sumList.isEmpty()) continue;
@@ -147,10 +163,13 @@ public class EventSummaryManager implements Serializable{
 //						for(String line: sum.getExecutionLog()){
 //							System.out.println(line);
 //						}
+//						System.out.println("Should match: "+ (sum.getExecutionLog().size() == expandedLog.size()));
+//						System.out.println("Should match: "+ sum.getExecutionLog().equals(expandedLog));
 //					}
-					if(	sum.getExecutionLog().size() == expandedLog.size() && 
-							isMatch(sum.getExecutionLog(), expandedLog) ){
-						Common.TRACE();
+					
+					if(	sum.getExecutionLog().size() == expandedLog.size() &&  
+							sum.getExecutionLog().equals(expandedLog)){
+//						Common.TRACE();
 						if(matched == null){
 							matched = sum;
 							EventSummaryPair pair = setTargetLines(new EventSummaryPair(event.clone(), sum, true));
@@ -161,8 +180,11 @@ public class EventSummaryManager implements Serializable{
 					}else{
 //						Common.TRACE();
 						EventSummaryPair pair = setTargetLines(new EventSummaryPair(event.clone(), sum));
-						this.put_internal( pair , segmentalStorage_symbolic);
-						queue.add(pair);
+						if(solver.hasValidConstraints(sum)){
+							this.put_internal( pair , segmentalStorage_symbolic);
+							
+							queue.add(pair);
+						}else{ this.put_internal(pair, segmentalStorage_invalid); }
 					}
 				}
 				if(matched == null){
@@ -203,15 +225,18 @@ public class EventSummaryManager implements Serializable{
 	public EventSummaryPair next(){
 		Common.TRACE();
 		EventSummaryPair result = null;
+
 		while(!queue.isEmpty()){
 			if(!queue.peek().isExecuted()){
 				result = queue.poll();
 				result.increaseCount();
-				queue.add(result); break;
+				if(result.getValidationCount() < maxValidationCount){
+					queue.add(result); 
+				}
+				break;
 			}
 			queue.poll();
 		}
-		if(Common.DEBUG)System.out.println("Next: "+result);
 		return result;
 	}
 	
@@ -224,7 +249,6 @@ public class EventSummaryManager implements Serializable{
 			}
 			queue.poll();
 		}
-		if(Common.DEBUG)System.out.println("Has next: "+found);
 		return found;
 	}
 	
@@ -232,12 +256,9 @@ public class EventSummaryManager implements Serializable{
 		Common.TRACE();
 		Sequence seq = summaryToSequence.get(esPair);
 		if(seq == null){
-			AnchorSolver solve = new AnchorSolver();
-			List<List<EventSummaryPair>> generated = solve.solve(esPair);
-			
+			List<List<EventSummaryPair>> generated = solver.solve(esPair);
 			seq = new Sequence();
 			summaryToSequence.put(esPair, seq);
-			
 			seq.eCount = Common.model.getAllEdges().size();
 			seq.vCount = Common.model.getAllVertex().size();
 			
@@ -247,9 +268,10 @@ public class EventSummaryManager implements Serializable{
 			int newECount = Common.model.getAllEdges().size();
 			int newVCount = Common.model.getAllVertex().size();
 			if( newECount!=seq.eCount || newVCount!=seq.vCount ){
-				AnchorSolver solve = new AnchorSolver();
-				List<List<EventSummaryPair>> generated = solve.solve(esPair);
-				seq.addAll(generated);
+				seq.eCount = newECount;
+				seq.vCount = newVCount;
+				List<List<EventSummaryPair>> generated = solver.solve(esPair);
+				if(generated != null) seq.addAll(generated);
 			}
 			return seq.next();
 		}
@@ -297,7 +319,7 @@ public class EventSummaryManager implements Serializable{
 				PathSummary sum = es.getPathSummary();
 				if(sum == null) continue;
 				if( sum.getExecutionLog().size() == expandedLog.size() &&
-						this.isMatch(sum.getExecutionLog(), expandedLog) ){
+						sum.getExecutionLog().equals(expandedLog)){
 					result = es; break;
 				}
 			}
@@ -313,7 +335,6 @@ public class EventSummaryManager implements Serializable{
 		if(primary == null) return null;
 		
 		String methodSig = (signature==null?"":signature);
-		Common.TRACE(methodSig);
 		
 		Map<Integer, List<EventSummaryPair>> secondary = primary.get(methodSig);
 		if(secondary == null) return null;
@@ -323,7 +344,6 @@ public class EventSummaryManager implements Serializable{
 			esList =  secondary.get(0);
 		}else esList =  secondary.get(expandedLog.size());
 		if(esList == null) return null;
-		Common.TRACE(expandedLog.size()+"");
 		
 		if(expandedLog == null){
 			for(EventSummaryPair es : esList){
@@ -332,19 +352,12 @@ public class EventSummaryManager implements Serializable{
 				}
 			}
 		}else{
-			Common.TRACE(esList.size()+"");
 			for(EventSummaryPair es : esList){
 				PathSummary sum = es.getPathSummary();
 				if(sum == null) continue;//should not happen
 				
-				
-				for(String line : sum.getExecutionLog()){
-					Common.TRACE(line);
-				}
-				Common.TRACE(this.isMatch(sum.getExecutionLog(), expandedLog)+"");
-				
 				if( sum.getExecutionLog().size() == expandedLog.size() &&
-						this.isMatch(sum.getExecutionLog(), expandedLog) ){
+						sum.getExecutionLog().equals(expandedLog) ){
 					return es;
 				}
 			}
@@ -385,16 +398,17 @@ public class EventSummaryManager implements Serializable{
 		return line.replace("Method_Starting,", "").trim();
 	}
 	
-	boolean isMatch(List<String> sumLog, List<String> expanded){
-		List<String> cloned = new ArrayList<>();
-		for(String line : sumLog){
-			int index = line.lastIndexOf(',');
-			if(index > 0){
-				cloned.add(line.substring(0, index));
-			}else{ cloned.add(line); }
-		}
-		return cloned.equals(expanded);
-	}
+//	boolean isMatch(List<String> sumLog, List<String> expanded){
+////		List<String> cloned = new ArrayList<>();
+////		for(String line : sumLog){
+////			int index = line.lastIndexOf(',');
+////			if(index > 0){
+////				cloned.add(line.substring(0, index));
+////			}else{ cloned.add(line); }
+////		}
+////		return cloned.equals(expanded);
+//		return sumLog.equals(expanded);
+//	}
 	
 	
 	class Sequence{

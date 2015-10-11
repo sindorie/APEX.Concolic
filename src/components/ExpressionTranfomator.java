@@ -148,7 +148,7 @@ public class ExpressionTranfomator {
 				return processOperator(mappedOperator, input);
 			}
 		};
-		System.out.println("Unkown: "+ content);
+		System.out.println("Unkown: '"+ content+"'"+input.toYicesStatement());
 		return null; //invalid case
 	}
 	

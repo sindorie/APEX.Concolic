@@ -14,7 +14,7 @@ import apex.symbolic.SymbolicExecution;
 public class Common {
 	public static UIModel model;
 	public static SymbolicExecution symbolic;
-	public static EventSummaryManager esManager;
+	public static EventSummaryManager summaryManager;
 	
 	public static String apkPath;
 	public static String serial;

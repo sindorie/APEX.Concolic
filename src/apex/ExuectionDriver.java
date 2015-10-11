@@ -15,7 +15,6 @@ import components.GraphicalLayout;
 public class ExuectionDriver {
 	
 	List<Event> newEventList = new ArrayList<Event>();
-	EventSummaryManager summaryManager = new EventSummaryManager();
 	EventExecution eExecution = new EventExecution(Common.serial, Common.model, Common.app);
 	GraphicalLayout currentUI = GraphicalLayout.Launcher;
 	Map<String, List<List<EventSummaryPair>>> foundSequences = 
@@ -51,15 +50,14 @@ public class ExuectionDriver {
 					return true; 
 				}
 			}
-		}else if( (validationCandidate = summaryManager.next()) != null ){
+		}else if( (validationCandidate = Common.summaryManager.next()) != null ){
 			event = validationCandidate.getEvent();
 			if(Common.DEBUG){System.out.println("Validation: "+validationCandidate.toString());}
 			if(validationCandidate.isExecuted()) return true; //should not happen
-			List<EventSummaryPair> solvingSequence = Common.esManager.getNextSequence(validationCandidate);
+			List<EventSummaryPair> solvingSequence = Common.summaryManager.getNextSequence(validationCandidate);
 			if(solvingSequence == null) return true;
 			eExecution.reinstall();
 			EventExecutionResult midResult = eExecution.doSequence(solvingSequence, true);
-			
 			GraphicalLayout focuedWin 
 				= midResult.predefinedUI != null ? midResult.predefinedUI
 				: Common.model.findOrConstructUI(midResult.focusedWin.actName, midResult.node);
@@ -77,7 +75,7 @@ public class ExuectionDriver {
 			System.out.println("Final reuslt is null for execution result");
 			return true;
 		}//something is wrong; -- Cannot retrieve focused window
-		EventSummaryPair esPair = Common.esManager.findSummary(event, finalResult.sequences);
+		EventSummaryPair esPair = Common.summaryManager.findSummary(event, finalResult.sequences);
 		GraphicalLayout dest 
 			= finalResult.predefinedUI != null ? finalResult.predefinedUI
 			: Common.model.findOrConstructUI(finalResult.focusedWin.actName, finalResult.node);

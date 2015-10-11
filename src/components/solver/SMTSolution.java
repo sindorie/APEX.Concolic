@@ -22,17 +22,35 @@ public class SMTSolution {
 		CHECK_START = "=========Checking===========",
 		CHECK_END	= "===========Done=============";
 	
+	public final static int SAT = 1, UNSAT = 2, UNKOWN = 3;
+	
+	
+	
+	public int checkSatisfactionDetail(List<String>[] results){
+		for(String st : results[0]){//0 should be stdout
+			st = st.trim();
+			if(st.equalsIgnoreCase("unsat")) return UNSAT;
+			else if(st.equals("sat")) return SAT;
+			else if(st.equalsIgnoreCase("unkown")) return UNKOWN;
+		}
+		return UNKOWN;
+	}
+	
 	/**
 	 * Given the outputs from the solver, check satisfaction
 	 * @param results
 	 * @return
 	 */
-	public boolean checkSatifaction(List<String>[] results){
+	public boolean checkSatisfaction(List<String>[] results){
 		for(String st : results[0]){//0 should be stdout
 			st = st.trim();
 			if(st.equals("sat")) return true;
 		}
 		return false;
+	}
+	
+	public boolean isVariable(Expression expre){
+		return expre.getContent().equals( ExpressionTranfomator.VAR_TAG );
 	}
 
 	/**

@@ -53,6 +53,8 @@ public class InputMethodOverview {
 				TreeUtility.breathFristSearch(tree, new Searcher(){
 					@Override
 					public int check(TreeNode node) {
+						if(((DefaultMutableTreeNode) node).getUserObject() == null) return Searcher.NORMAL;
+						
 						String line = ((DefaultMutableTreeNode) node).getUserObject().toString();
 						if(line.startsWith("inputType")){
 							String[] data = InformationCollector.extractMultiValue(line);

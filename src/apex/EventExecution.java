@@ -2,6 +2,7 @@ package apex;
 
 import java.util.List;
 
+import android.view.KeyEvent;
 import apex.staticFamily.StaticApp;
 import components.Event;
 import components.EventExecutor;
@@ -39,6 +40,8 @@ public class EventExecution {
 		String pkgName = this.app.getPackageName();
 		ex.applyEvent(EventFactory.createReinstallEvent(pkgName, app.getInstrumentedApkPath()));
 		model.hasReinstalled();
+		ex.applyEvent(EventFactory.CreatePressEvent(null, KeyEvent.KEYCODE_HOME));
+		
 	}
 	
 	public boolean reposition(GraphicalLayout current, GraphicalLayout target){

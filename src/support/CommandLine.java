@@ -92,15 +92,20 @@ public class CommandLine {
 	
 				stdoutSB.append(reading);
 			}
+			
 //			if(DEBUG)Logger.trace("Stdout: "+stdoutSB.toString().replace("\r|\n", ""));
 //			if(DEBUG)Logger.trace("Stderr: "+stderrSB.toString().replace("\r|\n", ""));
+			if(Common.DEBUG) Common.TRACE("Stdout: "+stdoutSB.toString().replace("\r|\n", ""));
+			if(Common.DEBUG) Common.TRACE("Stderr: "+stderrSB.toString().replace("\r|\n", ""));
 			return task.exitValue();
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		
+
+		if(Common.DEBUG) Common.TRACE("Stdout: "+stdoutSB.toString().replace("\r|\n", ""));
+		if(Common.DEBUG) Common.TRACE("Stderr: "+stderrSB.toString().replace("\r|\n", ""));
 //		if(DEBUG)Logger.trace("Stdout: "+stdoutSB.toString().replace("\r|\n", ""));
 //		if(DEBUG)Logger.trace("Stderr: "+stderrSB.toString().replace("\r|\n", ""));
 		return -1;

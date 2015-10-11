@@ -5,7 +5,10 @@ import java.util.List;
 
 import components.EventSummaryManager;
 import components.EventSummaryPair;
+import components.ExpressionTranfomator;
 import apex.staticFamily.StaticAppBuilder;
+import apex.symbolic.Expression;
+import apex.symbolic.PathSummary;
 import apex.symbolic.SymbolicExecution;
 
 public class IncrementalProcedure {
@@ -30,14 +33,21 @@ public class IncrementalProcedure {
 		Common.app = StaticAppBuilder.fromAPK(Common.apkPath);
 		Common.app.instrument();
 		Common.symbolic = new SymbolicExecution(Common.app);
-		Common.esManager = new EventSummaryManager();
+		Common.summaryManager = new EventSummaryManager();
 		Common.model = new UIModel();
 		
 		driver = new ExuectionDriver();
-		driver.prepare();
 	}
 	void check(){
-		//TODO 
+		System.out.println("Basic info checking");
+		System.out.println("APK Path: "+Common.app.getApkPath());
+		System.out.println("Instrumented APK Path: "+Common.app.getInstrumentedApkPath());
+		System.out.println("Package name: "+Common.app.getPackageName());
+		System.out.println("Main Activity existence: "+(Common.app.getMainActivity() != null));
+		System.out.println("Main Activity name: "+Common.app.getMainActivity().getJavaName());
+		
+		
+		//TODO environment checking, tool checking
 	}
 	void loop(){
 		startTime = System.currentTimeMillis();
@@ -51,15 +61,41 @@ public class IncrementalProcedure {
 		Common.model.showGUI();
 		System.out.println("Total edges: "+Common.model.getAllEdges().size());
 		System.out.println("ConcreteSegmentalSummary");
-		for(EventSummaryPair esPair : Common.esManager.getAllConcreteSegmentalSummary()){
+		for(EventSummaryPair esPair : Common.summaryManager.getAllConcreteSegmentalSummary()){
 			System.out.println(esPair);
 		}
 		System.out.println("SymbolicSegmentalSummary");
-		for(EventSummaryPair esPair : Common.esManager.getAllSymbolicSegmentalSummary()){
+		for(EventSummaryPair esPair : Common.summaryManager.getAllSymbolicSegmentalSummary()){
 			System.out.println(esPair);
 		}
 		System.out.println("ConcreteSummary");
-		for(EventSummaryPair esPair : Common.esManager.getAllConcreteSummary()){
+		for(EventSummaryPair esPair : Common.summaryManager.getAllConcreteSummary()){
+			System.out.println(esPair);
+		}
+		System.out.println("InvalidSummary");
+		for(EventSummaryPair esPair : Common.summaryManager.getAllInvalidSegmentalSummary()){
+			System.out.println(esPair);
+			PathSummary summary = esPair.getPathSummary();
+			List<Expression> constraints = summary.getPathConditions();
+			List<Expression> symbolices = summary.getSymbolicStates();
+			List<Expression>[] transformed = ExpressionTranfomator.transform(constraints, symbolices);
+			List<Expression> transformedCon = transformed[ExpressionTranfomator.CONSTRAINT_INDEX];
+			System.out.println("constraints");
+			for(Expression expre : constraints){
+				System.out.println(expre.toYicesStatement());
+			}
+			System.out.println("symbolices");
+			for(Expression expre : symbolices){
+				System.out.println(expre.toYicesStatement());
+			}
+			System.out.println("transformedCon");
+			for(Expression expre : transformedCon){
+				System.out.println(expre.toYicesStatement());
+			}
+			
+		}
+		System.out.println("Queue Remaining");
+		for(EventSummaryPair esPair : Common.summaryManager.getRemainingInQueue()){
 			System.out.println(esPair);
 		}
 	}
@@ -78,6 +114,7 @@ public class IncrementalProcedure {
 		}else{
 			setup();
 			check();
+			driver.prepare();
 			try{
 				loop();
 			}catch(Exception e){
