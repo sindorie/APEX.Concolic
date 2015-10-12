@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -28,12 +29,12 @@ import components.solver.SMTSolution;
 
 public class AnchorSolver {
 
+	boolean useConcat = false;
 	boolean debug = false;
 	SMTSolution solution = new SMTSolution();
-	final static int INSAT = 0, SAT = 1, COMPLETE = 2;
+	public final static int INSAT = 0, SAT = 1, COMPLETE = 2;
 	
-	private int maxDepth = 10, maxWidth = 10;
-//	List<List<EventSummaryPair>> sequenceList = new ArrayList<List<EventSummaryPair>>();
+	private int maxDepth = 20, maxWidth = 10;
 	List<DefaultMutableTreeNode> leaves;
 	
 	public boolean hasValidConstraints(PathSummary summary){
@@ -49,13 +50,6 @@ public class AnchorSolver {
 		}
 		return !result.isEmpty();
 	}
-	
-	
-//	Map<String, Map<Integer, Map<List<String>, >>>
-	
-
-	
-	
 	
 	
 	/**
@@ -75,7 +69,7 @@ public class AnchorSolver {
 	 * @param currentPack -- the current context which contains the cumulative path
 	 * @return a new context or null if not pass the check
 	 */
-	SolvingPack checkQualification(EventSummaryPair esPair, SolvingPack currentPack){
+	public SolvingPack checkQualification(EventSummaryPair esPair, SolvingPack currentPack){
 		PathSummary newSum = esPair.getPathSummary();
 		if(newSum == null) return null;
 			
@@ -96,6 +90,19 @@ public class AnchorSolver {
 		if(related){
 			PathSummary concated = newSum.concat(current_cumulative); //the candidate for new cumulative path
 			if(concated == null){ return null; } //should not happen
+			Common.TRACE(concated.getMethodSignature());
+			if(Common.DEBUG){
+				for(Expression expre : this.getConstraints(current_cumulative)){
+					Common.TRACE(expre.toYicesStatement());
+				}
+				for(Entry<Expression, Expression> entry : this.getSymbolics(newSum).entrySet()){
+					Common.TRACE(entry.getKey().toYicesStatement()+" = "+entry.getValue().toYicesStatement());
+				}
+			}
+			
+			
+			
+			
 			int code = solveHelper(concated, esPair);
 			switch(code){
 			case INSAT:{ Common.TRACE("not staified");} break; //do nothing
@@ -130,7 +137,7 @@ public class AnchorSolver {
 	 * @param sum -- the path summary needs to be checked
 	 * @return a set of expressions which represent the variables
 	 */
-	Set<Expression> getConstraintVarSet(PathSummary sum){
+	public Set<Expression> getConstraintVarSet(PathSummary sum){
 		TransformedPack result = getTransformedInformation(sum);
 		return result.variable_Constraint;
 	}
@@ -140,7 +147,7 @@ public class AnchorSolver {
 	 * @param sum -- the path summary needs to be checked
 	 * @return a set of expressions which represent the variables
 	 */
-	Set<Expression> getSymbolicVarSet(PathSummary sum){
+	public Set<Expression> getSymbolicVarSet(PathSummary sum){
 		TransformedPack result = getTransformedInformation(sum);
 		return result.variable_Symbolic;
 	}
@@ -186,7 +193,7 @@ public class AnchorSolver {
 	 * @param sumB
 	 * @return
 	 */
-	boolean isASubSetToB_symbolic(PathSummary sumA, PathSummary sumB){
+	public boolean isASubSetToB_symbolic(PathSummary sumA, PathSummary sumB){
 		TransformedPack packA = getTransformedInformation(sumA);
 		TransformedPack packB = getTransformedInformation(sumB);
 		Map<Expression, Expression> symA = packA.symbolics; 
@@ -239,7 +246,7 @@ public class AnchorSolver {
 	 * @param sum
 	 * @return
 	 */
-	Set<Expression> getConstraints(PathSummary sum){
+	public Set<Expression> getConstraints(PathSummary sum){
 		TransformedPack result = getTransformedInformation(sum);
 		return result.constraints;
 	}
@@ -250,7 +257,7 @@ public class AnchorSolver {
 	 * @param sum
 	 * @return
 	 */
-	Map<Expression,Expression> getSymbolics(PathSummary sum){
+	public Map<Expression,Expression> getSymbolics(PathSummary sum){
 		TransformedPack result = getTransformedInformation(sum);
 		return result.symbolics;
 	}
@@ -263,8 +270,9 @@ public class AnchorSolver {
 	 * @param sum
 	 * @return
 	 */
-	private TransformedPack getTransformedInformation(PathSummary sum){
+	public TransformedPack getTransformedInformation(PathSummary sum){
 		String sig = sum.getMethodSignature();
+		sig = sig.split("concat")[0].trim();
 		Map<Integer, Map<List<String>, TransformedPack>> primary = transformed_storage.get(sig);
 		if(primary == null){
 			primary = new HashMap<Integer, Map<List<String>, TransformedPack>>();
@@ -292,7 +300,6 @@ public class AnchorSolver {
 			Set<Expression> result_constraint_varSet;
 			
 			result_constraint.addAll(constraints);
-			solution.trim(result_constraint); //remove un-needed constraint like 1 < 2
 			for(Expression sym_expre : symbolicStates ){
 				Expression leftVar = (Expression) sym_expre.getChildAt(0);
 				if(!solution.isVariable(leftVar)){
@@ -327,7 +334,7 @@ public class AnchorSolver {
 	 * the transformed format.
 	 * @author zhenxu
 	 */
-	class TransformedPack{
+	public class TransformedPack{
 		Set<Expression> constraints;
 		Map<Expression,Expression> symbolics;
 
@@ -341,10 +348,28 @@ public class AnchorSolver {
 	 * @param esPair
 	 */
 	public List<List<EventSummaryPair>> solve(EventSummaryPair esPair){
-		Common.TRACE();
+		Common.TRACE(esPair.toString());
+		if(Common.DEBUG){
+			Common.TRACE("path condition");
+			for(Expression expre : esPair.getPathSummary().getPathConditions()){
+				Common.TRACE(expre.toYicesStatement());
+			}
+			Common.TRACE("transformed");
+			for(Expression expre : this.getConstraints(esPair.getPathSummary())){
+				Common.TRACE(expre.toYicesStatement());
+			}
+			for(String line : this.solution.buildScript(this.getConstraints(esPair.getPathSummary()))){
+				Common.TRACE(line);
+			}
+			
+		}
+		
+		if(getConstraints(esPair.getPathSummary()).size() == 0) return null;
+		
 		SolvingPack pk = new SolvingPack();
 		pk.esPair = esPair;
 		pk.cumulativePath = esPair.getPathSummary();
+//		pk.cumulativeConstraint = this.getConstraints(sum);
 		DefaultMutableTreeNode root = new DefaultMutableTreeNode(pk);
 		leaves = new ArrayList<DefaultMutableTreeNode>();
 		leaves.add(root);
@@ -364,6 +389,9 @@ public class AnchorSolver {
 					SolvingPack solvingContext = checkQualification(edge, pk);
 					if(solvingContext != null){ // it is valid 
 						qualified.add(solvingContext);
+						
+						Set<Expression> result_constraint = this.getConstraints(solvingContext.cumulativePath);
+						solution.trim(result_constraint); //remove un-needed constraint like 1 < 2
 					}
 				}
 
@@ -371,7 +399,13 @@ public class AnchorSolver {
 				//TODO	
 //				List<Double> pirorityLabel = new ArrayList<>();
 				for(SolvingPack pack : qualified){	
-					leaf.add(new DefaultMutableTreeNode(pack));
+					
+					
+					
+					
+					DefaultMutableTreeNode node = new DefaultMutableTreeNode(pack);
+					leaf.add(node);
+					newLeaves.add(node);
 				}
 				
 				
@@ -426,6 +460,7 @@ public class AnchorSolver {
 				EventSummaryPair esAnchor_src = anchors.get(i);
 				EventSummaryPair esAnchor_des = anchors.get(i+1);
 				if(esAnchor_src.getTarget() != esAnchor_des.getSource()){
+					Common.TRACE();
 					List<EventSummaryPair> seq = findLocalConnecter(GraphicalLayout.Launcher,
 							first.getSource(), varSet);
 					if(seq == null) continue Major;
@@ -437,6 +472,7 @@ public class AnchorSolver {
 			expandedList.add(expanded);
 		}
 		
+		Common.TRACE("Expanded list size: "+expandedList.size());
 		Collections.sort(expandedList, new ListSZComparator());
 		return expandedList;
 	}
@@ -455,9 +491,21 @@ public class AnchorSolver {
 		boolean isEntry = esPair.getEvent()!=null? esPair.getEvent().getEventType() == EventFactory.iLAUNCH : false;
 			
 		Set<Expression> constraints = getConstraints(concated);
+		if(Common.DEBUG){
+			for(Expression expre : constraints){
+				Common.TRACE(expre.toYicesStatement());
+			}
+		}
+		
 //		Set<Expression> symbolics = getSymbolics(concated);
 		
 		List<String> script = solution.buildScript(constraints);
+		if(Common.DEBUG){
+			for(String line: script){
+				Common.TRACE(line);
+			}
+		}
+		
 		List<String>[] solvingResult = null;
 		try {
 			solvingResult = CVCSolver.solve(script);
@@ -468,12 +516,16 @@ public class AnchorSolver {
 		if(solvingResult == null) return INSAT;
 		if(solution.checkSatisfaction(solvingResult)){
 			Set<Expression> varSet = solution.getVarSet(constraints);
+			if(Common.DEBUG){
+				for(Expression expre : varSet){
+					Common.TRACE(expre.toYicesStatement());
+				}
+			}
 			if(isEntry){ //remove variable in the 
-				
+				//TODO 
 			}
 			
-			
-			if(solution.getVarSet(constraints).size() == 0 ){
+			if(this.solution.isComplete(constraints)){
 				return COMPLETE;
 			}else{ return SAT; }
 		}else{ return INSAT; }
@@ -506,5 +558,6 @@ public class AnchorSolver {
 		EventSummaryPair esPair;
 		PathSummary cumulativePath;
 		boolean complete = false;
+//		Set<Expression> cumulativeConstraint;
 	}
 }	

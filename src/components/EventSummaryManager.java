@@ -261,7 +261,7 @@ public class EventSummaryManager implements Serializable{
 			summaryToSequence.put(esPair, seq);
 			seq.eCount = Common.model.getAllEdges().size();
 			seq.vCount = Common.model.getAllVertex().size();
-			
+			seq.addAll(generated);
 			if(generated == null || generated.isEmpty()) return null;
 			return seq.next();
 		}else{
@@ -424,7 +424,10 @@ public class EventSummaryManager implements Serializable{
 		void addAll(List<List<EventSummaryPair>> toAdd){
 			if(toAdd == null) return;
 			for(List<EventSummaryPair> e : toAdd){
-				if(!waiting.contains(e))waiting.add(e);
+				if(!waiting.contains(e) && !tried.contains(e)){
+					Common.TRACE(e.toString());
+					waiting.add(e);
+				}
 			}
 			Collections.sort(toAdd, new ListSZComparator());
 		}

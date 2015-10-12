@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+import apex.Common;
 import apex.Configuration;
 
 public class CVCSolver {
@@ -28,6 +29,7 @@ public class CVCSolver {
 		PrintWriter pw = new PrintWriter(tmpScript);
 		for(String smt :statements){
 			pw.println(smt);
+//			Common.TRACE(smt);
 		}
 		pw.close();
 		tmpScript.deleteOnExit();

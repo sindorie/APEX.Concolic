@@ -36,7 +36,7 @@ public class ReadCSV {
 		     
 		   
 			if(country[5].equals("0")==true && country[6].equals("0")==false){
-			System.out.println("\""+ss+":"+country[6]+"\",");
+				System.out.println("\""+ss+":"+country[6]+"\",");
 			}
 	
 		}

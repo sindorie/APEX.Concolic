@@ -6,7 +6,6 @@ import java.util.Scanner;
 import java.util.Stack;
 
 import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreeNode;
 
 import components.GraphicalLayout;
@@ -74,6 +73,23 @@ public class TreeUtility {
 	    return row;
 	} // expandJTreeNode()
 	
+	public static String treeToText(TreeNode node){
+		return treeToText(node, 0);
+	}
+	
+	private static String treeToText(TreeNode node, int level){
+		StringBuilder sb = new StringBuilder();
+		for(int i =0;i<level;i++){
+			sb.append("    ");
+		}
+		String segment = node.toString();
+		if(segment == null) segment = "";
+		sb.append(segment).append("\n");
+		for(int i =0 ;i<node.getChildCount(); i ++){
+			sb.append(treeToText((TreeNode)node.getChildAt(i),level+1));
+		}
+		return sb.toString();
+	}
 	
 	public static interface Searcher{
 		public final static int STOP = 2, SKIP = 1, NORMAL = 0;

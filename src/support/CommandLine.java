@@ -9,7 +9,7 @@ import apex.Common;
 import apex.Configuration;
 
 public class CommandLine {
-	public static boolean DEBUG = true;
+	public static boolean DEBUG = false;
 	public static String unlockScreenShellCommand = "input keyevent 82";
 	public static String clickPowerButtonShellCommand = "input keyevent KEYCODE_POWER";
 	
@@ -58,7 +58,7 @@ public class CommandLine {
 	}
 
 	public static int executeCommand(String command , int timeout_ms){
-		if(Common.DEBUG) System.out.println(command);
+		if(DEBUG) System.out.println(command);
 		Process task = null;
 		InputStream stderrStream = null, stdoutStream = null;
 		clear();
@@ -95,8 +95,8 @@ public class CommandLine {
 			
 //			if(DEBUG)Logger.trace("Stdout: "+stdoutSB.toString().replace("\r|\n", ""));
 //			if(DEBUG)Logger.trace("Stderr: "+stderrSB.toString().replace("\r|\n", ""));
-			if(Common.DEBUG) Common.TRACE("Stdout: "+stdoutSB.toString().replace("\r|\n", ""));
-			if(Common.DEBUG) Common.TRACE("Stderr: "+stderrSB.toString().replace("\r|\n", ""));
+			if(DEBUG) Common.TRACE("Stdout: "+stdoutSB.toString().replace("\r|\n", ""));
+			if(DEBUG) Common.TRACE("Stderr: "+stderrSB.toString().replace("\r|\n", ""));
 			return task.exitValue();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -104,8 +104,8 @@ public class CommandLine {
 			e.printStackTrace();
 		}
 
-		if(Common.DEBUG) Common.TRACE("Stdout: "+stdoutSB.toString().replace("\r|\n", ""));
-		if(Common.DEBUG) Common.TRACE("Stderr: "+stderrSB.toString().replace("\r|\n", ""));
+		if(DEBUG) Common.TRACE("Stdout: "+stdoutSB.toString().replace("\r|\n", ""));
+		if(DEBUG) Common.TRACE("Stderr: "+stderrSB.toString().replace("\r|\n", ""));
 //		if(DEBUG)Logger.trace("Stdout: "+stdoutSB.toString().replace("\r|\n", ""));
 //		if(DEBUG)Logger.trace("Stderr: "+stderrSB.toString().replace("\r|\n", ""));
 		return -1;
