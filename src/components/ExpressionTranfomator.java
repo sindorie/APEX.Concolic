@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import apex.Common;
 import apex.symbolic.Expression;
 
 
@@ -29,15 +30,20 @@ import apex.symbolic.Expression;
  * 	Pending expression generation mechanism needs to be better understood
  * 	And the use of pending ones needs to further improvement
  * 
+ * 	Due to the repetitive clone during the transformation, the memory consumption seems to be O(n^2)
+ * 
  * @author zhenxu
  *
  */
 public class ExpressionTranfomator {
 
+	public final static List<Expression> UNIDENTIFIER_LIST = new ArrayList<>();
+	
+	
 	/**
 	 * If the current work is performed on symbolics
 	 */
-	private boolean isSymbolic;
+	private boolean isSymbolic, printed = false;
 	
 	private List<Expression> 
 		resultedSymbolics = new ArrayList<Expression>(), 
@@ -118,38 +124,43 @@ public class ExpressionTranfomator {
 	 * @param input
 	 * @return
 	 */
-	Expression recusiveBuildDispatcher(Expression input){
+	public Expression recusiveBuildDispatcher(Expression input){
 		String content = input.getContent().trim();
+		Expression result = null;
 		if(content.equalsIgnoreCase(KW_FINSTANCE) ||
 			content.equalsIgnoreCase(KW_FSTATIC) ){
-			return formateField(input);
+			result = formateField(input);
 		}else if(content.equalsIgnoreCase(KW_API)){
-			return processAPI(input);
+			result = processAPI(input);
 		}else if(content.equalsIgnoreCase(KW_THIS)){
 			//should not be encountered under here
-			return null;
+			result = null;
 		}else if(content.equalsIgnoreCase(KW_ARRAY)){
-			return processArray(input);
+			result = processArray(input);
 		}else if(content.equalsIgnoreCase(KW_ARRAY_LENGTH)){
-			return processArrayLength(input);
+			result = processArrayLength(input);
 		}else if(content.equalsIgnoreCase(KW_CONST_STRING)){
-			return processConstString(input);
+			result = processConstString(input);
 		}else if(content.equalsIgnoreCase(KW_NEWINSTANCE)){
-			return processNewInstance(input);
+			result = processNewInstance(input);
 		}else if(content.equalsIgnoreCase(KW_RETURN)){
 			//should not occur
-			return null;
+//			return null;
 		}else if(input.isLeaf()){
 			//TODO may want to check content
-			return input.clone();
+			result = input.clone();
 		}else{
 			String mappedOperator = operatorMap.get(content);
 			if(mappedOperator != null){
-				return processOperator(mappedOperator, input);
+				result = processOperator(mappedOperator, input);
 			}
 		};
-		System.out.println("Unkown: '"+ content+"'"+input.toYicesStatement());
-		return null; //invalid case
+		
+		if(result == null){
+//			System.out.println("Unkown: '"+ content+"'"+input.toYicesStatement());
+			this.showError(input);
+		}
+		return result; //invalid case
 	}
 	
 	Expression processNewInstance(Expression input){
@@ -551,22 +562,30 @@ public class ExpressionTranfomator {
 	Expression processAPI(Expression input){
 		//assume the current node is $API
 		Expression methodSig = (Expression) input.getChildAt(0);
-		//invoke-virtual {v0}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+		//invoke-virtual {v0}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String; --old version
+		//Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
 		String content = methodSig.getContent().trim();
 		//'invoke {v#...' 'Class' 'method' 'arguments' 'return'
-		String[] decoded = content.split("},\\s|(->)|\\(|\\)");
+//		String[] decoded = content.split("},\\s|(->)|\\(|\\)");
+		String[] decoded = content.split("->|\\(|\\)");
 		Pattern argP = Pattern.compile("((L[a-zA-Z0-9\\$_\\/]*;)|[ZBSCIJFD])\\[*");
-		Matcher argM = argP.matcher(decoded[3]);
+		Matcher argM = argP.matcher(decoded[2]);
 		List<String> argTypes = new ArrayList<String>();
 		while(argM.find()){ argTypes.add(argM.group().trim()); }
 
-		System.out.println(input.toYicesStatement());
+//		System.out.println(input.toYicesStatement());
 //		System.out.println(Arrays.toString(decoded));
 		//check StringBuilder API
-		String clz = decoded[1].trim();
-		String method = decoded[2].trim();
+		String clz = decoded[0].trim();
+		String method = decoded[1].trim();
 		String type = decoded[3].trim();
-		System.out.println(type);
+//		System.out.println(type);
+		
+//		System.out.println("clz: "+clz);
+//		System.out.println("method: "+method);
+//		System.out.println("return type: "+type);
+//		System.out.println("Arguments: "+argTypes);
+		
 		if(clz.equalsIgnoreCase(STRINGBUILDER_CLZ)){
 			//can only deal with a few
 			//append -> str.++
@@ -708,7 +727,7 @@ public class ExpressionTranfomator {
 				newNode.add(t_postfix);
 				return newNode;
 			}else if(method.equalsIgnoreCase("length")){
-				System.out.println(input.toYicesStatement());
+//				System.out.println(input.toYicesStatement());
 				
 				Expression obj = (Expression) input.getChildAt(1);
 				Expression t_obj = recusiveBuildDispatcher(obj);
@@ -831,7 +850,6 @@ public class ExpressionTranfomator {
 		}
 		return null; // Not supposed to happen if it is field instance or static field
 	}
-	
 
 	void replaceNodeInParent(Expression node, Expression content){
 		Expression parent = (Expression) node.getParent();
@@ -937,6 +955,13 @@ public class ExpressionTranfomator {
 		};
 		for(int i =0;i<operatorPairs.length;i+=2){
 			operatorMap.put(operatorPairs[i], operatorPairs[i+1]);
+		}
+	}
+	
+	private void showError(Expression current){
+		if(printed == false){
+			UNIDENTIFIER_LIST.add(current.clone());
+			printed = true;
 		}
 	}
 }

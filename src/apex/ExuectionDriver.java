@@ -1,6 +1,7 @@
 package apex;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,15 +12,13 @@ import components.EventSummaryPair;
 import components.EventSummaryManager;
 import components.ExpressionTranfomator;
 import components.GraphicalLayout;
+import components.ListSZComparator;
 
 public class ExuectionDriver {
 	
 	List<Event> newEventList = new ArrayList<Event>();
 	EventExecution eExecution = new EventExecution(Common.serial, Common.model, Common.app);
 	GraphicalLayout currentUI = GraphicalLayout.Launcher;
-	Map<String, List<List<EventSummaryPair>>> foundSequences = 
-				new HashMap<String, List<List<EventSummaryPair>>>();
-	
 	
 	 void prepare(){
 		 this.eExecution.reinstall();
@@ -88,22 +87,25 @@ public class ExuectionDriver {
 			System.out.println(  "new events:"+((newEvents != null)?newEvents.size():0 ));
 		}
 		Common.model.record(esPair);
-		checkTargetReach(finalResult.log);
+		checkTargetReach(esPair);
 		Common.TRACE();
 		return true;
 	}
 	
-	void checkTargetReach(List<String> log){
+	void checkTargetReach(EventSummaryPair esPair){
+		if(esPair.getPathSummary() == null) return;
+		List<String> log = esPair.getPathSummary().getSourceCodeLog();
 		if(log == null || Common.targets == null || Common.targets.isEmpty()) return;
 		for(String line : log){
 			if(Common.targets.contains(line)){
 				Common.remaining.remove(line);
-				List<List<EventSummaryPair>> seqRecord = foundSequences.get(line);
+				List<List<EventSummaryPair>> seqRecord = Common.foundSequences.get(line);
 				if(seqRecord == null){
 					seqRecord = new ArrayList<List<EventSummaryPair>>();
-					foundSequences.put(line, seqRecord);
+					Common.foundSequences.put(line, seqRecord);
 				}
 				seqRecord.add(Common.model.getCurrentLine());
+				Collections.sort(seqRecord, new ListSZComparator());
 			}
 		}
 	}

@@ -11,7 +11,7 @@ import components.system.WindowInformation;
 import components.system.WindowOverview;
 
 public class EventExecutionResult {
-	List<String> log;
+	List<String> logcatReading;
 	List<List<String>> sequences;
 	InputMethodOverview iInfo;
 	WindowOverview wInfo;

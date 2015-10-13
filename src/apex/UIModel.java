@@ -31,7 +31,7 @@ public class UIModel {
 	private Map<GraphicalLayout, List<EventSummaryPair>> vertex_to_loopEdges;
 	private List<List<EventSummaryPair>> slices;
 	private List<EventSummaryPair> currentLine;
-	private Map<GraphicalLayout, List<EventSummaryPair>> knownSequence;
+	private Map<GraphicalLayout, List<EventSummaryPair>> knownSequenceToUI;
 	private List<EventSummaryPair> allKnownEdges;
 	private transient List<Event> newEventBuffer;
 	
@@ -40,7 +40,7 @@ public class UIModel {
 		vertex_to_loopEdges = new HashMap<GraphicalLayout, List<EventSummaryPair>>();
 		nameToUI = new HashMap<String,List<GraphicalLayout>>();
 		slices = new ArrayList<List<EventSummaryPair>>();
-		knownSequence = new HashMap<GraphicalLayout, List<EventSummaryPair>>();
+		knownSequenceToUI = new HashMap<GraphicalLayout, List<EventSummaryPair>>();
 		allKnownEdges = new ArrayList<EventSummaryPair>();
 		
 		List<GraphicalLayout> list = new ArrayList<GraphicalLayout>();
@@ -121,9 +121,9 @@ public class UIModel {
 			currentLine.add(step);
 			
 			GraphicalLayout dest = step.getTarget();
-			List<EventSummaryPair> path = knownSequence.get(dest);
+			List<EventSummaryPair> path = knownSequenceToUI.get(dest);
 			if(path == null || path.size() > this.currentLine.size()){
-				knownSequence.put(dest, new ArrayList<EventSummaryPair>(currentLine));
+				knownSequenceToUI.put(dest, new ArrayList<EventSummaryPair>(currentLine));
 			}
 		}
 	}
@@ -132,6 +132,9 @@ public class UIModel {
 			this.slices.add(currentLine);
 			currentLine = null;
 		}
+	}
+	public List<List<EventSummaryPair>> getAllSlices(){
+		return this.slices;
 	}
 	public List<EventSummaryPair> getCurrentLine(){
 		if(currentLine == null) return null;
@@ -151,7 +154,7 @@ public class UIModel {
 	}
 	
 	public List<EventSummaryPair> findKownSequence(GraphicalLayout target){
-		List<EventSummaryPair> list = knownSequence.get(target);
+		List<EventSummaryPair> list = knownSequenceToUI.get(target);
 		return list;
 	}
 	

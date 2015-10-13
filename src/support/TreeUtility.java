@@ -1,5 +1,7 @@
 package support;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -8,6 +10,7 @@ import java.util.Stack;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeNode;
 
+import apex.symbolic.Expression;
 import components.GraphicalLayout;
 import components.LayoutNode;
 
@@ -73,6 +76,63 @@ public class TreeUtility {
 	    return row;
 	} // expandJTreeNode()
 	
+	
+	public final static String chunk = "    ";
+	public static List<Expression> textTreeToExpression_file(String fileName) throws FileNotFoundException{
+		File f = new File(fileName);
+		Scanner sc = new Scanner(f);
+		List<Expression> list = new ArrayList<>();
+		Expression expre = null;
+		int current = -1;
+		while(sc.hasNextLine()){
+			String line = sc.nextLine();
+			if(line == null || line.trim().isEmpty()) continue;
+			int count = (line.length() - line.replace(chunk, "").length()) / chunk.length();
+			if(count == 0){
+				if(expre != null){ list.add((Expression)expre.getRoot()); }
+				expre = new Expression(line.trim());
+				current = 0;
+			}else{
+				while(current >= count){
+					expre = (Expression) expre.getParent();
+					current --;
+				}
+				current = count;
+				Expression child = new Expression(line.trim());
+				expre.add(child);
+				expre = child;
+			}
+		}
+		if(expre != null){ list.add((Expression)expre.getRoot()); }
+		sc.close();
+		return list;
+	}
+	
+	public static Expression textTreeToExpression(String input){
+		String[] list = input.split("\n");
+		Expression expre = null;
+		int current = -1;
+		for(String line : list){
+			if(line.trim().isEmpty()) continue;
+			
+			int count = (line.length() - line.replace(chunk, "").length()) / chunk.length();
+			if(count == 0){
+				expre = new Expression(line.trim());
+				current = 0;
+			}else{
+				while(current >= count){
+					expre = (Expression) expre.getParent();
+					current --;
+				}
+				current = count;
+				Expression child = new Expression(line.trim());
+				expre.add(child);
+				expre = child;
+			}
+		}
+		return expre;
+	}
+	
 	public static String treeToText(TreeNode node){
 		return treeToText(node, 0);
 	}
@@ -80,7 +140,7 @@ public class TreeUtility {
 	private static String treeToText(TreeNode node, int level){
 		StringBuilder sb = new StringBuilder();
 		for(int i =0;i<level;i++){
-			sb.append("    ");
+			sb.append(chunk);
 		}
 		String segment = node.toString();
 		if(segment == null) segment = "";

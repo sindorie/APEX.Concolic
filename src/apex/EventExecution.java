@@ -112,7 +112,7 @@ public class EventExecution {
 		result.focusedWin = focusedWin;
 		result.keyboardVisible = keyboardVisible;
 		result.sequences = sequences;
-		result.log = lines;
+		result.logcatReading = lines;
 		return result;
 	}
 	

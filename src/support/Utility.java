@@ -2,15 +2,12 @@ package support;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 public class Utility {
@@ -56,19 +53,19 @@ public class Utility {
 	}
 	
 	
-	public static String format_spaceLevel(Object in, int level){
+	public static String format_TabLevel(Object in, int level){
 		String input = (in == null ? "null" : in.toString());
-		for(int i = 0;i<level;i++){ input = " "+input; }
+		for(int i = 0;i<level;i++){ input = "\t"+input; }
 		return input;
 	}
 	
-	public static String format_UnderLineSeperator(String input){
+	public static String format_HyphenWrapper(String input){
 		if(input.length() > 80) return input;
 		int length = input.length();
 		int remaining = 80 - length;
 		int half = remaining/2;
 		int postfix = half;
-		int prefix = 80 - half - postfix;
+		int prefix = 80 - length - postfix;
 		StringBuilder sb = new StringBuilder();
 		for(int i =0;i<prefix;i++){
 			sb.append("-");
@@ -126,4 +123,5 @@ public class Utility {
 		}
 		return result;
 	}
+
 }

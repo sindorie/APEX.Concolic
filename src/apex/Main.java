@@ -14,6 +14,7 @@ public class Main {
 		environmentSetup();
 		IncrementalProcedure procedure = new IncrementalProcedure(apkPath, targets, "emulator-5554");
 		procedure.go();
+		new Statistic().check();
 	}
 	
 	static void environmentSetup(){
