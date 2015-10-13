@@ -83,7 +83,7 @@ public class InputMethodOverview {
 							return Searcher.NORMAL;
 						}
 						if(line.startsWith("packageName")){
-							System.out.println(line);
+//							System.out.println(line);
 							String[] data = InformationCollector.extractMultiValue(line);
 							packageName = data[0];
 							fieldId = data[1];
