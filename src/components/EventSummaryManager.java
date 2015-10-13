@@ -425,7 +425,6 @@ public class EventSummaryManager implements Serializable{
 			if(toAdd == null) return;
 			for(List<EventSummaryPair> e : toAdd){
 				if(!waiting.contains(e) && !tried.contains(e)){
-					Common.TRACE(e.toString());
 					waiting.add(e);
 				}
 			}
