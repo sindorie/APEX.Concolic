@@ -71,7 +71,10 @@ public class CommandLine {
 				stdoutSB.append(reading);
 			}
 			if(DEBUG) Common.TRACE("Stdout: "+stdoutSB.toString().replace("\r|\n", ""));
-			if(DEBUG) Common.TRACE("Stderr: "+stderrSB.toString().replace("\r|\n", ""));
+//			if(DEBUG) 
+			String msg = stderrSB.toString().replace("\r|\n", "").trim();
+			if(msg.isEmpty() == false)
+				Common.TRACE("Stderr: "+msg);
 			return task.exitValue();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -80,7 +83,10 @@ public class CommandLine {
 		}
 
 		if(DEBUG) Common.TRACE("Stdout: "+stdoutSB.toString().replace("\r|\n", ""));
-		if(DEBUG) Common.TRACE("Stderr: "+stderrSB.toString().replace("\r|\n", ""));
+//		if(DEBUG) 
+		String msg = stderrSB.toString().replace("\r|\n", "").trim();
+		if(msg.isEmpty() == false)
+			Common.TRACE("Stderr: "+msg);
 		return -1;
 	}
 

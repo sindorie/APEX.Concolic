@@ -175,8 +175,8 @@ public class UIModel {
 		frame.setVisible(true);
 	}
 	
-	void createNewEvent(GraphicalLayout layout){
-		List<Event> toAdd = new ArrayList<Event>();
+	void createNewEvent(final GraphicalLayout layout){
+		final List<Event> toAdd = new ArrayList<Event>();
 		toAdd.add(EventFactory.CreatePressEvent(layout, KeyEvent.KEYCODE_BACK));
 		
 		TreeUtility.breathFristSearch(layout.getRootNode(), new Searcher(){

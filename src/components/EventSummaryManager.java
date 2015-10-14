@@ -194,7 +194,11 @@ public class EventSummaryManager implements Serializable{
 							Common.TRACE(line);
 						}
 					}
-					matched = Common.symbolic.doFullSymbolic((ArrayList<String>)rawLogcat);
+					try{
+						matched = Common.symbolic.doFullSymbolic((ArrayList<String>)rawLogcat);
+					}catch(Exception e){
+						e.printStackTrace();
+					}catch(Error e1){ e1.printStackTrace(); System.gc(); }
 				}
 				if(matched != null){
 					pList.add(matched);

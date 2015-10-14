@@ -9,8 +9,8 @@ import java.util.Scanner;
 public class Main {
 	//the apk path
 	static String apkPath = 
-			"/home/zhenxu/workspace/ArraySolvingApk/app/build/outputs/apk/ArraySolvingAPK.apk";
-//			"/home/zhenxu/workspace/AndroidTestAPKPlayGround/Jensen/net.mandaria.tippytipper.apk";
+//			"/home/zhenxu/workspace/ArraySolvingApk/app/build/outputs/apk/ArraySolvingAPK.apk";
+			"/home/zhenxu/workspace/AndroidTestAPKPlayGround/Jensen/net.mandaria.tippytipper.apk";
 //			"/home/zhenxu/workspace/StringSymbolicTestingApp/app/build/outputs/apk/app-debug.apk";
 //			"/home/zhenxu/workspace/ThreadTest/app/build/outputs/apk/ThreadAndExceptionTest.apk";
 	static String[] targets = null;
@@ -39,11 +39,12 @@ public class Main {
 				line = line.replaceAll(",| |\"", "");
 				arr.add(line);
 			}
+			sc.close();
 		return arr.toArray(new String[0]);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-		
+	
 		return null;
 	}
 }
