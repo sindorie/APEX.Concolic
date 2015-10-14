@@ -27,8 +27,8 @@ public class EventExecutor {
 		case EventFactory.iLAUNCH:{
 			String packageName = (String) event.getAttribute(EventFactory.att_pkgName);
 			String actName = (String) event.getAttribute(EventFactory.att_actName);
-			String shellCommand = "am start " + packageName + "/" + actName;
-			CommandLine.executeShellCommand(shellCommand, serial);
+			String shellCommand = "shell am start " + packageName + "/" + actName;
+			CommandLine.executeADBCommand(shellCommand, serial);
 		}break;
 		case EventFactory.iREINSTALL:{
 			String packageName = (String) event.getAttribute(EventFactory.att_pkgName);
@@ -47,8 +47,8 @@ public class EventExecutor {
 		}break;
 		case EventFactory.iPRESS:{
 			String keycode = (String)event.getAttribute(EventFactory.att_keyCode);
-			String inputCommand = "input keyevent " + keycode;
-			CommandLine.executeShellCommand(inputCommand, serial);
+			String inputCommand = "shell input keyevent " + keycode;
+			CommandLine.executeADBCommand(inputCommand, serial);
 			
 			try {
 				Thread.sleep(1000);
@@ -62,8 +62,8 @@ public class EventExecutor {
 			String y = event.getAttribute(EventFactory.att_yCoordinate).toString();
 			iX = Integer.parseInt(x);
 			iY = Integer.parseInt(y);
-			String inputCommand = "input tap " + iX + " " + iY;
-			CommandLine.executeShellCommand(inputCommand, serial);
+			String inputCommand = "shell input tap " + iX + " " + iY;
+			CommandLine.executeADBCommand(inputCommand, serial);
 		}break;
 		case EventFactory.iINPUT:{
 			int iX, iY;
@@ -72,12 +72,12 @@ public class EventExecutor {
 			String y = event.getAttribute(EventFactory.att_yCoordinate).toString();
 			iX = Integer.parseInt(x);
 			iY = Integer.parseInt(y);
-			String inputCommand = "input tap " + iX + " " + iY;
-			CommandLine.executeShellCommand(inputCommand, serial);
+			String inputCommand = "shell input tap " + iX + " " + iY;
+			CommandLine.executeADBCommand(inputCommand, serial);
 			
 			String text = event.getAttribute(EventFactory.att_textInput).toString();
-			String textCommand = "input text "+ text;
-			CommandLine.executeShellCommand(textCommand, serial);
+			String textCommand = "shell input text "+ text;
+			CommandLine.executeADBCommand(textCommand, serial);
 			
 		}break;
 		case EventFactory.iUNDEFINED:

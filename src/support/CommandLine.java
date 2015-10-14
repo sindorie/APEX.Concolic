@@ -33,28 +33,13 @@ public class CommandLine {
 	}
 	
 	public static int executeADBCommand(String command, String serial){
-		return executeCommand(Configuration.getValue(Configuration.attADB)
-				+" -s "+serial+" "+command);
+		if(serial == null){ return executeCommand(Configuration.getValue(Configuration.attADB) +" "+command);
+		}else{ return executeCommand(Configuration.getValue(Configuration.attADB) +" -s "+serial+" "+command); }
 	}
 	
 	public static int executeADBCommand(String command, String serial, int timeout_ms){
-		return executeCommand(Configuration.getValue(Configuration.attADB)
-				+" -s "+serial+" "+command,timeout_ms);
-	}
-	
-	public static int executeShellCommand(String command, String serial){
-		return executeCommand(Configuration.getValue(Configuration.attADB)
-				+ " -s "+serial+" shell "+command);
-	}
-	
-	public static int executeShellCommand(String command, String serial, int timeout_ms){
-		return executeCommand(Configuration.getValue(Configuration.attADB)
-				+ " -s "+serial+" shell "+command, timeout_ms);
-	}
-	
-	public static int executeShellCommand(String command){
-		return executeCommand(Configuration.getValue(Configuration.attADB)
-				+ " shell "+command);
+		if(serial == null){ return executeCommand(Configuration.getValue(Configuration.attADB) +" "+command,timeout_ms);
+		}else{ return executeCommand(Configuration.getValue(Configuration.attADB) +" -s "+serial+" "+command,timeout_ms); }
 	}
 
 	public static int executeCommand(String command , int timeout_ms){
@@ -64,14 +49,7 @@ public class CommandLine {
 		clear();
 		try {
 			task = Runtime.getRuntime().exec(command);
-			if(timeout_ms>0){ 
-				synchronized(task){
-					task.wait(timeout_ms);
-				}
-//				while(task.isAlive()){
-//					task.destroy();
-//					Thread.sleep(200);
-//				}
+			if(timeout_ms>0){  synchronized(task){ task.wait(timeout_ms); }
 			}else{ task.waitFor(); }
 			
 			stderrStream = task.getErrorStream();
@@ -92,9 +70,6 @@ public class CommandLine {
 	
 				stdoutSB.append(reading);
 			}
-			
-//			if(DEBUG)Logger.trace("Stdout: "+stdoutSB.toString().replace("\r|\n", ""));
-//			if(DEBUG)Logger.trace("Stderr: "+stderrSB.toString().replace("\r|\n", ""));
 			if(DEBUG) Common.TRACE("Stdout: "+stdoutSB.toString().replace("\r|\n", ""));
 			if(DEBUG) Common.TRACE("Stderr: "+stderrSB.toString().replace("\r|\n", ""));
 			return task.exitValue();
@@ -106,8 +81,6 @@ public class CommandLine {
 
 		if(DEBUG) Common.TRACE("Stdout: "+stdoutSB.toString().replace("\r|\n", ""));
 		if(DEBUG) Common.TRACE("Stderr: "+stderrSB.toString().replace("\r|\n", ""));
-//		if(DEBUG)Logger.trace("Stdout: "+stdoutSB.toString().replace("\r|\n", ""));
-//		if(DEBUG)Logger.trace("Stderr: "+stderrSB.toString().replace("\r|\n", ""));
 		return -1;
 	}
 
@@ -120,15 +93,5 @@ public class CommandLine {
 	public static void clear(){
 		stdoutSB = new StringBuilder();
 		stderrSB = new StringBuilder();
-	}
-	
-	
-	public static String requestInput(){
-		if(sc == null){
-			 sc = new Scanner(System.in);
-		}
-		
-		String line = sc.nextLine();
-		return line;
 	}
 }

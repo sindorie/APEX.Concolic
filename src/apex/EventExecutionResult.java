@@ -17,7 +17,7 @@ public class EventExecutionResult {
 	WindowOverview wInfo;
 	WindowInformation focusedWin;
 	LayoutNode node;
-	boolean keyboardVisible;
+	boolean keyboardVisible = false, isCrashed = false;
 	GraphicalLayout predefinedUI;
 	int scope;
 }

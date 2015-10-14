@@ -24,7 +24,7 @@ public class InformationCollector {
 	private DefaultMutableTreeNode targetNode = null;
 	public InputMethodOverview getInputMethodOverview(){
 		CommandLine.clear();
-		CommandLine.executeShellCommand(InputMethodOverview.DumpCommand, serial);
+		CommandLine.executeADBCommand("shell "+InputMethodOverview.DumpCommand, serial);
 		String input = CommandLine.getLatestStdoutMessage();
 		
 		TreeUtility.breathFristSearch(TreeUtility.buildLineTree(input), new Searcher(){
@@ -42,7 +42,7 @@ public class InformationCollector {
 	}
 
 	public WindowPolicy getWindowPolicy(){
-		CommandLine.executeShellCommand(WindowPolicy.DumpCommand, serial);
+		CommandLine.executeADBCommand("shell "+WindowPolicy.DumpCommand, serial);
 		String input = CommandLine.getLatestStdoutMessage();		
 		TreeUtility.breathFristSearch(TreeUtility.buildLineTree(input), new Searcher(){
 			@Override
@@ -59,7 +59,7 @@ public class InformationCollector {
 	}
 	
 	public WindowOverview getWindowOverview(){
-		CommandLine.executeShellCommand(WindowOverview.DumpCommand, serial);
+		CommandLine.executeADBCommand("shell "+WindowOverview.DumpCommand, serial);
 		String input = CommandLine.getLatestStdoutMessage();
 		return new WindowOverview(TreeUtility.buildLineTree(input));
 	}
