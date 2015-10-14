@@ -51,7 +51,7 @@ public class ExuectionDriver {
 			
 			if(Common.DEBUG){System.out.println("Validation: "+validationCandidate.toString());}
 			if(validationCandidate.isExecuted()) return true; //should not happen
-			List<EventSummaryPair> solvingSequence = Common.summaryManager.getNextSequence(validationCandidate);
+			List<EventSummaryPair> solvingSequence = Common.summaryManager.getValidationSequence(validationCandidate);
 			if(solvingSequence == null || solvingSequence.isEmpty()) return true;
 			eExecution.reinstall();
 			EventExecutionResult midResult = eExecution.doSequence(solvingSequence, true);

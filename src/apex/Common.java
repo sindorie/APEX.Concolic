@@ -35,7 +35,9 @@ public class Common {
 	public static void addErrorInfo(String msg){ buffer.add(msg); }
 	private static PrintWriter[] writers = null;
 	
-	
+	/**
+	 * Print the caller method information
+	 */
 	public static void TRACE(){
 		if(DEBUG){
 			StackTraceElement[] info = Thread.currentThread().getStackTrace();
@@ -45,6 +47,10 @@ public class Common {
 		}
 	}
 	
+	/**
+	 * Print the caller method information with the message
+	 * @param msg
+	 */
 	public static void TRACE(String msg){
 		if(DEBUG){
 			StackTraceElement[] info = Thread.currentThread().getStackTrace();
