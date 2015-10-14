@@ -25,6 +25,17 @@ import components.GraphicalLayout;
 import components.LayoutNode;
 import components.system.InputMethodOverview;
 
+/**
+ * A model of the application focuses on the User interface part.
+ * Such model treat event-path as edge and each activity-layout as node.
+ * 
+ * Upon receiving a new activity-layout node, generate a list of potential
+ * events which will be executed later. 
+ * 
+ * 
+ * @author zhenxu
+ *
+ */
 public class UIModel {	
 	
 	private Map<String, List<GraphicalLayout>> nameToUI;
@@ -50,11 +61,16 @@ public class UIModel {
 		graph.addVertex(GraphicalLayout.Launcher);
 	}
 	
+	
+	/**
+	 * Update the model with the event-path pair. 
+	 * The execution result might imply an existence of text-input event
+	 * @param esPair - the event-path pair	
+	 * @param exeResult - a bundle of information for the carryout the event-path pair
+	 * @return a list of event which has not yet be executed. 
+	 */
 	public List<Event> update(EventSummaryPair esPair, EventExecutionResult exeResult){
-		Common.TRACE();
-		if(Common.DEBUG){
-			System.out.println(esPair);
-		}
+		Common.TRACE(esPair.toString());
 		allKnownEdges.add(esPair);
 		if(esPair.getSource() == esPair.getTarget()){
 			List<EventSummaryPair> list = vertex_to_loopEdges.get(esPair.getSource());
