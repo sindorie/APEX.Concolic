@@ -280,17 +280,19 @@ public class EventSummaryManager implements Serializable{
 	class Sequence{
 		List<List<EventSummaryPair>> waiting;
 		List<List<EventSummaryPair>> tried;
+		int vCount, eCount;//used to check if model has been updated needed.
 		
-		int vCount, eCount;//used to check if new validation needed.
 		Sequence(){
 			waiting = new ArrayList<>();
 			tried = new ArrayList<>();
 			vCount = eCount = 0;
 		}
-		void addAll(List<List<EventSummaryPair>> toAdd){
+		
+		void addAll(List<List<EventSummaryPair>> toAdd){ //could improve 
 			if(toAdd == null) return;
 			for(List<EventSummaryPair> e : toAdd){
-				if(!waiting.contains(e) && !tried.contains(e)){
+				if(!executedBefore(e) && !waiting.contains(e) && !tried.contains(e)){
+					//here could use some improvement in terms of time. TODO
 					waiting.add(e);
 				}
 			}
@@ -302,6 +304,28 @@ public class EventSummaryManager implements Serializable{
 			List<EventSummaryPair> result = waiting.get(0);
 			tried.add(result);
 			return result;
+		}
+		
+		boolean executedBefore(List<EventSummaryPair> list){
+			if(Common.model != null){
+				List<List<EventSummaryPair>> slices = Common.model.getAllSlices();
+				for(List<EventSummaryPair> slice : slices){
+					if(slice.size() >= list.size()){
+						boolean found = true;
+						for(int i =0;i < list.size() ; i++){
+							EventSummaryPair input = list.get(i);
+							EventSummaryPair existed = slice.get(i);
+							if(! input.getEvent().equals(existed.getEvent())){
+								found = false; break;
+							}
+						}
+						if(found){
+							return true;
+						}
+					}
+				}
+			}
+			return false;
 		}
 		
 		boolean isEmpty(){

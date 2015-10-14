@@ -1,8 +1,8 @@
 package apex;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,6 +21,7 @@ import support.TreeUtility.Searcher;
 import components.Event;
 import components.EventFactory;
 import components.EventSummaryPair;
+import components.EventSummaryStorage;
 import components.GraphicalLayout;
 import components.LayoutNode;
 import components.system.InputMethodOverview;
@@ -36,7 +37,7 @@ import components.system.InputMethodOverview;
  * @author zhenxu
  *
  */
-public class UIModel {	
+public class UIModel implements Serializable{	
 	
 	private Map<String, List<GraphicalLayout>> nameToUI;
 	private ListenableDirectedGraph<GraphicalLayout, EventSummaryPair> graph;
@@ -44,7 +45,7 @@ public class UIModel {
 	private List<List<EventSummaryPair>> slices;
 	private List<EventSummaryPair> currentLine;
 	private Map<GraphicalLayout, List<EventSummaryPair>> knownSequenceToUI;
-	private List<EventSummaryPair> allKnownEdges;
+	private EventSummaryStorage allKnownEdges;
 	private transient List<Event> newEventBuffer;
 	
 	public UIModel(){
@@ -53,7 +54,7 @@ public class UIModel {
 		nameToUI = new HashMap<String,List<GraphicalLayout>>();
 		slices = new ArrayList<List<EventSummaryPair>>();
 		knownSequenceToUI = new HashMap<GraphicalLayout, List<EventSummaryPair>>();
-		allKnownEdges = new ArrayList<EventSummaryPair>();
+		allKnownEdges = new EventSummaryStorage();
 		
 		List<GraphicalLayout> list = new ArrayList<GraphicalLayout>();
 		list.add(GraphicalLayout.Launcher);
@@ -71,7 +72,7 @@ public class UIModel {
 	 */
 	public List<Event> update(EventSummaryPair esPair, EventExecutionResult exeResult){
 		Common.TRACE(esPair.toString());
-		allKnownEdges.add(esPair);
+		allKnownEdges.store(esPair,true);
 		if(esPair.getSource() == esPair.getTarget()){
 			List<EventSummaryPair> list = vertex_to_loopEdges.get(esPair.getSource());
 			if(list == null){
@@ -135,22 +136,23 @@ public class UIModel {
 	public void record(EventSummaryPair step){
 		if(currentLine == null){
 			currentLine = new ArrayList<EventSummaryPair>();
-			currentLine.add(step);
-			
-			GraphicalLayout dest = step.getTarget();
-			List<EventSummaryPair> path = knownSequenceToUI.get(dest);
-			if(path == null || path.size() > this.currentLine.size()){
-				knownSequenceToUI.put(dest, new ArrayList<EventSummaryPair>(currentLine));
-			}
+			this.slices.add(currentLine);
+		}
+		currentLine.add(step);
+		GraphicalLayout dest = step.getTarget();
+		List<EventSummaryPair> path = knownSequenceToUI.get(dest);
+		if(path == null || path.size() > this.currentLine.size()){
+			knownSequenceToUI.put(dest, new ArrayList<EventSummaryPair>(currentLine));
 		}
 	}
+	
 	public void hasReinstalled(){
 		if(currentLine != null && !currentLine.isEmpty()){
 			this.slices.add(currentLine);
 			currentLine = null;
 		}
 	}
-	public List<List<EventSummaryPair>> getAllSlices(){
+	public List<List<EventSummaryPair>> getAllSlices(){		
 		return this.slices;
 	}
 	public List<EventSummaryPair> getCurrentLine(){
@@ -159,7 +161,7 @@ public class UIModel {
 	}
 	
 	public List<EventSummaryPair> getAllEdges(){
-		return allKnownEdges;
+		return allKnownEdges.getAlldata();
 	}
 	public Set<GraphicalLayout> getAllVertex(){
 		return this.graph.vertexSet();
