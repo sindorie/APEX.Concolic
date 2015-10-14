@@ -2,21 +2,18 @@ package apex;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Stack;
 
 import components.Event;
 import components.EventFactory;
 import components.EventSummaryPair;
-import components.EventSummaryManager;
-import components.ExpressionTranfomator;
 import components.GraphicalLayout;
 import components.ListSZComparator;
 
 public class ExuectionDriver {
 	
-	List<Event> newEventList = new ArrayList<Event>();
+	Stack<Event> newEventList = new Stack<Event>();
 	EventExecution eExecution = new EventExecution(Common.serial, Common.model, Common.app);
 	GraphicalLayout currentUI = GraphicalLayout.Launcher;
 	
@@ -37,8 +34,8 @@ public class ExuectionDriver {
 		Event event = null;
 		EventSummaryPair validationCandidate = null;
 		if(!newEventList.isEmpty()){
-			event = newEventList.remove(0);
-			if(Common.DEBUG){System.out.println("New Event: "+event.toString());}
+			event = newEventList.pop();
+			Common.TRACE("Pop new Event: "+event.toString());
 			if(!event.getSource().equals(this.currentUI)){
 				if(eExecution.reposition(currentUI, event.getSource())){
 					this.currentUI = event.getSource();
@@ -51,10 +48,11 @@ public class ExuectionDriver {
 			}
 		}else if( (validationCandidate = Common.summaryManager.next()) != null ){
 			event = validationCandidate.getEvent();
+			
 			if(Common.DEBUG){System.out.println("Validation: "+validationCandidate.toString());}
 			if(validationCandidate.isExecuted()) return true; //should not happen
 			List<EventSummaryPair> solvingSequence = Common.summaryManager.getNextSequence(validationCandidate);
-			if(solvingSequence == null) return true;
+			if(solvingSequence == null || solvingSequence.isEmpty()) return true;
 			eExecution.reinstall();
 			EventExecutionResult midResult = eExecution.doSequence(solvingSequence, true);
 			GraphicalLayout focuedWin 
@@ -83,9 +81,7 @@ public class ExuectionDriver {
 		List<Event> newEvents = Common.model.update(esPair, finalResult);
 		if(newEvents != null) newEventList.addAll(newEvents);
 		
-		if(Common.DEBUG){
-			System.out.println(  "new events:"+((newEvents != null)?newEvents.size():0 ));
-		}
+		Common.TRACE("Generate events size:"+((newEvents != null)?newEvents.size():0 ));
 		Common.model.record(esPair);
 		checkTargetReach(esPair);
 		Common.TRACE();

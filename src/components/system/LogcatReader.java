@@ -1,83 +1,241 @@
 package components.system;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Stack;
+import java.util.concurrent.TimeUnit;
 
+import apex.Common;
 import apex.Configuration;
 import support.CommandLine;
+import support.Utility;
 
 
 public class LogcatReader {
 	
-	String serial, adbLocation;
+	private String serial, adbLocation, errMsg;
+	private List<String> exeLog, tagLog;
+	private List<List<String>> methodLog;
+	private boolean isCrashed, reachMaxTime, hasException, readAll = false;
+	private long maxTime, minTime, startTime, duration ,lastUpdated, startSleep, sleepTime = 10;
+	public final static String formatMatcher = "^\\w\\(\\s*\\d*:\\s*\\d*\\).*"; //beginningLabel = "-*.*";;
+	public final static String instrumentationMatcher = "^\\w\\(\\s*\\d*:\\s*\\d*\\) (Method_Starting,|Method_Returning,|execLog,).*";
+	
+	public LogcatReader(){ this(null);}
 	public LogcatReader(String serial){
 		this.serial = serial; 
-		this.adbLocation = Configuration.getValue(Configuration.attADB);
-	}
-	
-	public void clearLogcat(){
-		CommandLine.executeADBCommand("logcat -c", serial);
+		this.adbLocation = Configuration.getValue(Configuration.attADB); 
+		setTime( 5*1000, 1*1000, 100, 50, 300 );
 	}
 	
 	/**
-	 * Read the feedback from logcat according to tag
-	 * @return
+	 * Set the time attributes, -1 means does not use
+	 * @param maxTime - the max time which the execution time should exceed 
+	 * @param minTime - the min time which the execution should process unless exception
+	 * @param duration - the min duration between two effect reading
+	 * @param sleepTime - the sleep time for each loop
+	 * @param startSleep - the sleep time right after the process is started
 	 */
-	public List<String> readLogcatFeedBack(){
-		ArrayList<String> result = new ArrayList<String>();
-		try{
-//			I( 3134: 3134) Method_Starting,Lcom/example/zhenxu/myapplication/MainActivity;->showSharedPreference(Landroid/view/View;)V
-			String command = adbLocation + " -s "+serial+" logcat -v thread -d  -s System.out";
-			final Process pc = Runtime.getRuntime().exec(command);
-			InputStream in = pc.getInputStream();
-			InputStream err = pc.getErrorStream();
-			
-			StringBuilder sb = new StringBuilder();
-			Thread.sleep(300);
-			//in order to avoid infinite loop
-			long point1 = System.currentTimeMillis();
-			while(true){
-				int count = in.available();
-				if(count <= 0) break;
-				byte[] buf = new byte[count];
-				in.read(buf);
-				sb.append(new String(buf));
-				long point2 = System.currentTimeMillis();
-				if(point2 - point1 > 300) break;
-			}
-			String errMsg = null;
-			if(err.available()>0){
-				int count = in.available();
-				byte[] buf = new byte[count];
-				in.read(buf);
-				errMsg = new String(buf);
-			}
-			if(errMsg!=null) System.out.println("DEBUG:errMsg,  "+errMsg);
-			
-			String tmp = sb.toString().trim();
-			if(tmp.equals("")) return result;//empty
-			String[] parts = tmp.split("\n");
-			for(String part: parts){
-				if(part == null) continue;
-				if(part.contains(") Method_Starting,") 
-						|| part.contains(") Method_Returning,") 
-						|| part.contains(") execLog,")){
-					
-					int index = part.indexOf(')');
-					result.add(part.substring(index+2).trim());
-				}
-			}
-			pc.destroy();
-			CommandLine.executeADBCommand("logcat -c", serial);
-		}catch(Exception e){
-			System.out.println(e.getLocalizedMessage());
+	public void setTime(long maxTime, long minTime, long duration, long sleepTime, long startSleep){
+		this.maxTime = maxTime; this.minTime = minTime; this.duration = duration; 
+		this.sleepTime = sleepTime; this.startSleep = startSleep;
+	}
+	/*Getters*/
+	public long getLastUpdated() { return lastUpdated;}
+	public void setLastUpdated(long lastUpdated) { this.lastUpdated = lastUpdated; }
+	public List<String> getExeLog() { return exeLog; }
+	public List<String> getTagLog() { return tagLog; }
+	public boolean isCrashed() { return isCrashed; }
+	public List<List<String>> getMethodLog() { return methodLog; }
+	public boolean hasException() { return hasException;}
+	public String getErrMsg() { return errMsg; }
+	public boolean hasReachedMaxTime(){ return this.reachMaxTime; }
+	/**
+	 * Will not group method. Only group with thread
+	 * @param readAll
+	 */
+	public void setReadAll(boolean readAll){ this.readAll = readAll; }
+	public boolean isReadAll(){return this.readAll; }
+	
+	/**
+	 * Clear the logcat buffer
+	 */
+	public void clearLogcat(){
+		String id = Utility.getPID("logcat", serial);
+		if(id != null && !id.isEmpty()){
+			CommandLine.executeADBCommand("shell kill "+id, serial);
 		}
-		return result;
+		CommandLine.executeADBCommand("logcat -c", serial); 
 	}
 	
-	public List<List<String>> extractMethodSequence(List<String> input){
+	/**
+	 * Read the logcat output
+	 * Samples:
+	 * I( 3134: 3134) Method_Starting,Lcom/example/zhenxu/myapplication/MainActivity;->showSharedPreference(Landroid/view/View;)V
+	 * --------- beginning of system
+	 * --------- beginning of crash
+	 * 
+	 * 
+	 * Does not use -d (which indicates No Block) as the ouput might be constant
+	 * Needs a max time out and min time limit. 
+	 * 
+	 * Take thread into consideration, group exelog by Thread and method root
+	 */
+	public void readFeedBack(){
+		resetInternalData();
+		readLogcat();
+		process();	
+	}
+	
+	private void resetInternalData(){
+		lastUpdated = -1;
+		exeLog = new ArrayList<>();
+		tagLog = new ArrayList<>();
+		methodLog = new ArrayList<>();
+		isCrashed = false;
+		reachMaxTime = false;
+		hasException = false;
+		errMsg = "";
+	}
+	
+	private void readLogcat(){
+		String command = null;
+		if(serial == null){ command = adbLocation +" logcat -v thread -s System.out";
+		}else{ command = adbLocation + " -s "+serial+" logcat -v thread -s System.out"; }
+		StringBuilder sb = new StringBuilder();
+		Process readProcess = null;
+		InputStream in = null, err = null;
+		try{
+			readProcess = Runtime.getRuntime().exec(command);
+			in = readProcess.getInputStream();
+			err = readProcess.getErrorStream();
+			if(startSleep > 0)Thread.sleep(startSleep); 
+			startTime = System.currentTimeMillis();
+			while(true){
+				int len = in.available();
+				boolean updated = false;
+				if(len > 0){
+					byte[] buf = new byte[len];
+					in.read(buf);
+					String bufStr = new String(buf);
+					for(int i = 0;i <bufStr.length(); i++){
+						char c = bufStr.charAt(i);
+						if(c == '\n'){
+							String line = sb.toString();
+							updated = processline(line);
+							sb = new StringBuilder();
+						}else{ sb.append(c);}
+					}
+				}
+				
+				//cannot breach max time limit
+				long currentTime = System.currentTimeMillis();
+				if(maxTime>0 && currentTime - startTime > maxTime){ reachMaxTime = true; break; }
+				//reading must be within certain limit
+				if(updated){ lastUpdated = currentTime;
+				}else{
+					if(minTime > 0 && currentTime - startTime <= minTime){}
+					else if(duration > 0 && currentTime - lastUpdated > duration){ break;}
+				}
+				if(sleepTime>0)Thread.sleep(sleepTime);
+			}
+			
+			int len = err.available();
+			if(len > 0){
+				byte[] buf = new byte[len];
+				in.read(buf);
+				String msg = new String(buf).trim();
+				if(msg.isEmpty() == false) errMsg = msg;
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+			hasException = true;
+			errMsg += e.getMessage();
+		}finally{
+			String line = sb.toString();
+			if(line.isEmpty() == false) processline(line);
+			if(readProcess != null){
+				readProcess.destroyForcibly();
+			}
+//			if(in != null)
+//				try { in.close(); } catch (IOException e) { e.printStackTrace(); }
+		}
+	}
+	
+	
+	/**
+	 * I( 3134: 3134) Method_Starting,Lcom/example/zhenxu/myapplication/MainActivity;->showSharedPreference(Landroid/view/View;)V
+	 * --------- beginning of system
+	 * --------- beginning of crash
+	 * @param line
+	 */
+	private boolean processline(String line){
+		line = line.trim();
+		if(readAll){
+			if(line.matches(formatMatcher)){
+				int index = line.indexOf(')');
+				String tag = line.substring(0, index+1);
+				String content = line.substring(index+2, line.length());
+				this.exeLog.add(content);
+				this.tagLog.add(tag);
+			}else{
+				this.exeLog.add(line);
+				this.tagLog.add("");
+			}
+			return true;
+		}else if(line.trim().equals("--------- beginning of crash")){
+			isCrashed = true;
+			return true;
+		}else if(line.matches(instrumentationMatcher)){
+			int index = line.indexOf(')');
+			String tag = line.substring(0, index+1);
+			String content = line.substring(index+2, line.length());
+			this.exeLog.add(content);
+			this.tagLog.add(tag);
+			return true;
+		}
+		return false;
+	}
+	
+	private void process(){
+		Map<String,List<String>> threadGroup = new HashMap<>();
+		List<String> order = new ArrayList<String>();
+		for(int i =0 ;i < this.exeLog.size(); i++){
+			String content = exeLog.get(i);
+			String tag = tagLog.get(i);
+			List<String> seq = null;
+			String threadId = "";
+			if(!tag.isEmpty()){
+				threadId = tag.replace(")", "").split(":")[1].trim();
+				seq = threadGroup.get(threadId);
+			}
+			if(seq == null){
+				seq = new ArrayList<>();
+				threadGroup.put(threadId, seq);
+				order.add(threadId);
+			}
+			seq.add(content);
+		}
+		if(readAll){
+			for(String start : order){
+				List<String> value = threadGroup.get(start);
+				this.methodLog.add(value);
+			}
+		}else{
+			for(String start : order){
+				List<String> value = threadGroup.get(start);
+				List<List<String>> threadMethodLog = extractMethodSequence(value);
+				this.methodLog.addAll(threadMethodLog);
+			}
+		}
+	}
+	
+	private List<List<String>> extractMethodSequence(List<String> input){
 		List<List<String>> result = new ArrayList<List<String>>();
 		Stack<String> methodStack = new Stack<String>();
 

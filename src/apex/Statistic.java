@@ -13,7 +13,7 @@ import components.ExpressionTranfomator;
 public class Statistic {
 
 	public void check(){
-		Common.model.showGUI();
+		Common.model.showGUI(true);
 		
 		Common.println("Total edges: "+Common.model.getAllEdges().size());
 		if(Common.summaryManager.getAllConcreteSegmentalSummary().isEmpty()){
@@ -22,6 +22,11 @@ public class Statistic {
 			Common.println(Utility.format_HyphenWrapper("Concrete segmental PathSummary:"));
 			for(EventSummaryPair esPair : Common.summaryManager.getAllConcreteSegmentalSummary()){
 				Common.println(esPair);
+				if(esPair.getPathSummary() != null){
+					for(String line : esPair.getPathSummary().getSourceCodeLog()){
+						Common.println(line);
+					}
+				}
 			}
 		}
 		if(Common.summaryManager.getAllSymbolicSegmentalSummary().isEmpty()){
@@ -30,6 +35,12 @@ public class Statistic {
 			Common.println(Utility.format_HyphenWrapper("Symbolic segmental PathSummary:"));
 			for(EventSummaryPair esPair : Common.summaryManager.getAllSymbolicSegmentalSummary()){
 				Common.println(esPair);
+				if(esPair.getPathSummary() != null){
+					for(String line : esPair.getPathSummary().getSourceCodeLog()){
+						Common.println(line);
+						
+					}
+				}
 			}
 		}
 		if(Common.summaryManager.getAllConcreteSummary().isEmpty()){
@@ -88,6 +99,11 @@ public class Statistic {
 			Common.println(Utility.format_HyphenWrapper("Remaining Event Path Pair:"));
 			for(EventSummaryPair esPair : Common.summaryManager.getRemainingInQueue()){
 				Common.println(esPair);
+				if(esPair.getPathSummary() != null){
+					for(String line : esPair.getPathSummary().getSourceCodeLog()){
+						Common.println(line);
+					}
+				}
 			}
 		}
 		

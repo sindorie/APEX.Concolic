@@ -15,6 +15,7 @@ import org.jgrapht.alg.DijkstraShortestPath;
 import org.jgrapht.ext.JGraphModelAdapter;
 import org.jgrapht.graph.ListenableDirectedGraph;
 
+import android.view.KeyEvent;
 import support.TreeUtility;
 import support.TreeUtility.Searcher;
 import components.Event;
@@ -158,7 +159,11 @@ public class UIModel {
 		return list;
 	}
 	
-	public void showGUI(){
+	/**
+	 * if should exist the program on exist
+	 * @param closeOnExit
+	 */
+	public void showGUI(boolean closeOnExit){
 		JGraphModelAdapter<GraphicalLayout, EventSummaryPair> adapter = new JGraphModelAdapter<GraphicalLayout, EventSummaryPair>(graph);
 		JGraph jgraph = new JGraph(adapter);
 		jgraph.setEditable(false);
@@ -166,11 +171,14 @@ public class UIModel {
 		JFrame frame = new JFrame();
 		frame.getContentPane().add(jgraph);
 		frame.setSize(800, 600);
+		if(closeOnExit) frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setVisible(true);
 	}
 	
 	void createNewEvent(GraphicalLayout layout){
 		List<Event> toAdd = new ArrayList<Event>();
+		toAdd.add(EventFactory.CreatePressEvent(layout, KeyEvent.KEYCODE_BACK));
+		
 		TreeUtility.breathFristSearch(layout.getRootNode(), new Searcher(){
 			@Override
 			public int check(TreeNode treeNode) {

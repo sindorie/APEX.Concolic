@@ -39,7 +39,6 @@ public class ExpressionTranfomator {
 
 	public final static List<Expression> UNIDENTIFIER_LIST = new ArrayList<>();
 	
-	
 	/**
 	 * If the current work is performed on symbolics
 	 */
@@ -146,6 +145,7 @@ public class ExpressionTranfomator {
 		}else if(content.equalsIgnoreCase(KW_RETURN)){
 			//should not occur
 //			return null;
+		}else if(content.matches(tmpVairableMatcher)){
 		}else if(input.isLeaf()){
 			//TODO may want to check content
 			result = input.clone();

@@ -66,7 +66,7 @@ public class IncrementalProcedure {
 		}
 	}
 	
-	boolean isLimitReached(){  return (iterationCount > 0xFFFF) || (this.maxDuration > 0 && System.currentTimeMillis() - this.maxDuration>0) ;  }
+	boolean isLimitReached(){  return (iterationCount > 0xFFFF) || (this.maxDuration > 0 && System.currentTimeMillis() - this.startTime > this.maxDuration) ;  }
 	boolean isAllreached(){ if(Common.targets == null || Common.targets.isEmpty()) return false; return Common.remaining.isEmpty(); }
 	public int getCurrentLoopCount(){ return this.iterationCount; }
 	public void setMaxDuation(long time){ maxDuration = time; }

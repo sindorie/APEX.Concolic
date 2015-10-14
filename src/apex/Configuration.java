@@ -31,7 +31,7 @@ public class Configuration {
 		File f = new File(fileName);
 		if(!f.exists()){
 			att.put(attADB, "adb");
-			att.put(attCVC4, "libs/cvc4-1.4-x86_64-linux-opt --lang smt --strings-exp --incremental ");
+			att.put(attCVC4, "libs/cvc4-1.4-x86_64-linux-opt --lang smt --strings-exp --tlimit=10000	 ");
 			writeXML();
 		}
 		readXML();
@@ -48,6 +48,14 @@ public class Configuration {
 		}else{
 			return result;
 		}
+	}
+	
+	public static boolean hasValue(String key){
+		return att.containsKey(key);
+	}
+	
+	public static void update(){
+		writeXML();
 	}
 	
 	private static boolean readXML(){

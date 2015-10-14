@@ -32,6 +32,7 @@ public class EventExecution {
 		sysInfo = new InformationCollector(serial);
 		viewInfoView = new ViewDeviceInfo(serial);
 		logcatReader = new LogcatReader(serial);
+		logcatReader.setTime(5000, 300, 300, 50, 300);
 		this.model = model;
 		this.app = app;
 	}
@@ -82,8 +83,22 @@ public class EventExecution {
 		} catch (InterruptedException e1) { }
 		
 		//read lines
-		List<String> lines = logcatReader.readLogcatFeedBack();
-		List<List<String>> sequences = logcatReader.extractMethodSequence(lines);
+		logcatReader.readFeedBack();
+		List<String> lines = logcatReader.getExeLog();
+		if(Common.DEBUG){
+			for(String line : lines){
+				Common.TRACE("EXELOG: "+line);
+			}
+		}
+		List<List<String>> sequences = logcatReader.getMethodLog();
+		if(Common.DEBUG){
+			for(List<String> list : sequences){
+				Common.TRACE("--------------------");
+				for(String line : list){
+					Common.TRACE(line);
+				}
+			}
+		}
 		try { Thread.sleep(300); } catch (InterruptedException e1) { }
 
 		//check if the UI within the app		
@@ -92,9 +107,7 @@ public class EventExecution {
 		boolean keyboardVisible = wInfo.isKeyboardVisible();
 		if (keyboardVisible) {ex.applyEvent(closeKeyboard);}
 		WindowInformation focusedWin = wInfo.getFocusedWindow();
-		while(focusedWin == null){
-			focusedWin = wInfo.getFocusedWindow();
-		}
+		while(focusedWin == null){ focusedWin = wInfo.getFocusedWindow(); }
 		
 		LayoutNode node = null;
 		int scope = focusedWin.isWithinApplciation(app);
@@ -113,6 +126,7 @@ public class EventExecution {
 		result.keyboardVisible = keyboardVisible;
 		result.sequences = sequences;
 		result.logcatReading = lines;
+		result.isCrashed = logcatReader.isCrashed();
 		return result;
 	}
 	

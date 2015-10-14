@@ -18,7 +18,6 @@ public class CommandLine {
 
 	private static StringBuilder stdoutSB = new StringBuilder();
 	private static StringBuilder stderrSB = new StringBuilder();
-	private static Scanner sc;
 	
 	public static boolean hasNextLine(){
 		try {
@@ -43,6 +42,7 @@ public class CommandLine {
 	}
 
 	public static int executeCommand(String command , int timeout_ms){
+		System.out.println("Command: "+command);
 		if(DEBUG) System.out.println(command);
 		Process task = null;
 		InputStream stderrStream = null, stdoutStream = null;

@@ -3,6 +3,7 @@ package components;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.jgrapht.graph.DefaultEdge;
 /**
@@ -51,7 +52,11 @@ public class Event implements Serializable{
 	public String toString(){
 		String typename = EventFactory.intToString(eventType);
 		String result = "";
-		result = typename+", "+source+", "+this.attributes; 
+		result = typename+":"+source+":[";
+		for(Entry<String,Object> entry : this.attributes.entrySet()){
+			result += entry.getKey()+"="+entry.getValue().toString()+":";
+		}
+		result += "]";
 		return result;
 	}
 	

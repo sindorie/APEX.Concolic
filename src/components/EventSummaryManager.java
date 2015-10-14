@@ -35,7 +35,7 @@ public class EventSummaryManager implements Serializable{
 	
 	AnchorSolver solver = new AnchorSolver();
 	
-	final static int maxValidationCount = 1;
+	final static int maxValidationCount = 10;
 
 	public List<EventSummaryPair> getRemainingInQueue(){
 		return this.queue.getRemaining();
@@ -148,7 +148,7 @@ public class EventSummaryManager implements Serializable{
 					}
 //					Common.TRACE();
 					sumList = Common.symbolic.doFullSymbolic(found);
-					Common.TRACE( (sumList!=null?sumList.size():0)+"");
+					Common.TRACE( "Add Summary "+(sumList!=null?sumList.size():0));
 					sumMap.put(signature, sumList);
 				}
 				if(sumList == null || sumList.isEmpty()) continue;
@@ -188,13 +188,12 @@ public class EventSummaryManager implements Serializable{
 					}
 				}
 				if(matched == null){
-//					Common.TRACE();
-//					if(Common.DEBUG){
-//						for(String line : expandedLog){
-//							System.out.println(line);
-//						}	
-//					}
-//					Common.TRACE("Symbolic execution by logcat out");
+					Common.TRACE("Symbolic execution by logcat out:"+rawLogcat.size());
+					if(Common.DEBUG){
+						for(String line : rawLogcat){
+							Common.TRACE(line);
+						}
+					}
 					matched = Common.symbolic.doFullSymbolic((ArrayList<String>)rawLogcat);
 				}
 				if(matched != null){
