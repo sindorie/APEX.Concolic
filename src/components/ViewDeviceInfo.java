@@ -2,13 +2,16 @@ package components;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
+import java.util.Scanner;
 
-import javax.swing.JFrame;
-import javax.swing.JTree;
 import javax.swing.tree.TreeNode;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -27,9 +30,9 @@ public class ViewDeviceInfo {
 	String serial;
 	String adb;
 	LayoutNode mRootNode;
-	boolean enableGUIDebug = true;
 	
-	String xmlTargtLoc = "/data/uidump";
+	String xmlTargtLoc = "/sdcard/uidump";
+//			"/data/uidump";
 	
 	private static String classBlackList = 
 			"android.webkit.WebView"
@@ -39,11 +42,6 @@ public class ViewDeviceInfo {
 	public ViewDeviceInfo(String serial){
 		this.serial = serial;
 		adb = Configuration.getValue(Configuration.attADB);
-		
-		if(enableGUIDebug){
-//			JTree tree = new JTree();
-//			Logger.registerJPanel("Layout Info", panel);
-		}
 	}
 	
 	public String getSerial(){
@@ -55,7 +53,7 @@ public class ViewDeviceInfo {
 	 * @return
 	 */
 	private int index = 0;
-	public LayoutNode loadWindowData(){
+	public LayoutNode loadWindowData() throws Exception{
 		mRootNode = null;
 		ProcRunner procRunner;
 		int retCode, waitTime = 10*1000;
@@ -90,7 +88,7 @@ public class ViewDeviceInfo {
 		throw new AssertionError(lastException.getLocalizedMessage());
 	}
 	
-	public LayoutNode buildTree(File xmlFile){
+	public LayoutNode buildTree(File xmlFile) throws SAXException, IOException{
  
         SAXParserFactory factory = SAXParserFactory.newInstance();
         SAXParser parser = null;
@@ -164,15 +162,19 @@ public class ViewDeviceInfo {
                 }
             }
         };
-        try {
+        try{
             parser.parse(xmlFile, handler);
-        } catch (SAXException e) {
-            e.printStackTrace();
-        
-            return null;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
+        }catch(Exception e){
+        	new File("error").mkdirs();
+        	Scanner sc = new Scanner(xmlFile);
+        	PrintWriter writer = new PrintWriter("error/"+Calendar.getInstance().getTime()+".xml");
+        	while(sc.hasNextLine()){
+        		String line = sc.nextLine();
+        		writer.println(line);
+        	}
+        	sc.close();
+        	writer.close();
+        	throw e;
         }
         //filter unnecessary Node
         

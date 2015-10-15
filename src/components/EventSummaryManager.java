@@ -76,7 +76,14 @@ public class EventSummaryManager implements Serializable{
 			signatures = new ArrayList<>();
 			for(List<String> log : separetedLogs){ 
 				//expand a log into full execution log and find the first method signature
-				signatures.add(this.extractMethodSig(log.get(0)));
+				String sig = this.extractMethodSig(log.get(0));
+				signatures.add(sig);
+				if(Common.DEBUG){
+					Common.TRACE(sig);
+					for(String line : log){
+						Common.TRACE(line);
+					}
+				}
 				ToDoPath tdp = Common.symbolic.expandLogcatOutput((ArrayList<String>)log);
 				List<String> expanded = tdp.getExecutionLog();
 				expandedList.add(expanded);

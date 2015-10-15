@@ -60,6 +60,11 @@ public class UIModel implements Serializable{
 		list.add(GraphicalLayout.Launcher);
 		this.nameToUI.put(GraphicalLayout.Launcher.getActName(), list);
 		graph.addVertex(GraphicalLayout.Launcher);
+		
+		List<GraphicalLayout> list1 = new ArrayList<GraphicalLayout>();
+		list1.add(GraphicalLayout.ErrorScene);
+		this.nameToUI.put(GraphicalLayout.ErrorScene.getActName(), list1);
+		graph.addVertex(GraphicalLayout.ErrorScene);
 	}
 	
 	

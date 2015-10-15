@@ -2,6 +2,7 @@ package apex;
 
 import java.util.List;
 
+import support.CommandLine;
 import android.view.KeyEvent;
 import apex.staticFamily.StaticApp;
 import components.Event;
@@ -18,7 +19,7 @@ import components.system.WindowInformation;
 import components.system.WindowOverview;
 
 public class EventExecution {
-	
+		
 	Event closeKeyboard = EventFactory.createCloseKeyboardEvent();
 	EventExecutor ex;
 	InformationCollector sysInfo;
@@ -32,7 +33,8 @@ public class EventExecution {
 		sysInfo = new InformationCollector(serial);
 		viewInfoView = new ViewDeviceInfo(serial);
 		logcatReader = new LogcatReader(serial);
-		logcatReader.setTime(5000, 300, 300, 50, 300);
+		//maxTime, minTime, duration, sleepTime, startSleep
+		logcatReader.setTime(5000, 100, 200, 50, 100);
 		this.model = model;
 		this.app = app;
 	}
@@ -40,9 +42,15 @@ public class EventExecution {
 	public void reinstall(){
 		String pkgName = this.app.getPackageName();
 		ex.applyEvent(EventFactory.createReinstallEvent(pkgName, app.getInstrumentedApkPath()));
+		Common.TRACE("Stdout:"+CommandLine.getLatestStdoutMessage());
+		Common.TRACE("Stderr:"+CommandLine.getLatestStdoutMessage());
 		model.hasReinstalled();
-		ex.applyEvent(EventFactory.CreatePressEvent(null, KeyEvent.KEYCODE_HOME));
-		
+		ex.applyEvent(EventFactory.CreatePressEvent(null, KeyEvent.KEYCODE_HOME));	
+	}
+	
+	public void clearup(){
+		String pkgName = this.app.getPackageName();
+		ex.applyEvent(EventFactory.createUninstallEvent(pkgName));
 	}
 	
 	public boolean reposition(GraphicalLayout current, GraphicalLayout target){
@@ -78,55 +86,58 @@ public class EventExecution {
 	EventExecutionResult carrayout(Event event){
 		Common.TRACE();
 		logcatReader.clearLogcat();
-		ex.applyEvent(event);
-		try { Thread.sleep(100);
-		} catch (InterruptedException e1) { }
+		ex.applyEvent(event, false);
+		EventExecutionResult result = new EventExecutionResult();
 		
-		//read lines
-		logcatReader.readFeedBack();
-		List<String> lines = logcatReader.getExeLog();
-		if(Common.DEBUG){
-			for(String line : lines){
-				Common.TRACE("EXELOG: "+line);
-			}
+		logcatReader.readFeedBack(); // waiting is taken into consideration
+		result.logcatReading = logcatReader.getExeLog();
+//		if(Common.DEBUG){ for(String line : result.logcatReading){ Common.TRACE("EXELOG: "+line); } }
+		result.sequences = logcatReader.getMethodLog();
+		//the UI and device internal might now stabilize after the logcat finishes reading
+		try { Thread.sleep(300); } catch (InterruptedException e1) {   }
+		
+		if( logcatReader.isCrashed() ){
+			result.predefinedUI = GraphicalLayout.ErrorScene;
+			result.isCrashed = true;
+			return result;
 		}
-		List<List<String>> sequences = logcatReader.getMethodLog();
-		if(Common.DEBUG){
-			for(List<String> list : sequences){
-				Common.TRACE("--------------------");
-				for(String line : list){
-					Common.TRACE(line);
-				}
-			}
-		}
-		try { Thread.sleep(300); } catch (InterruptedException e1) { }
 
 		//check if the UI within the app		
-		InputMethodOverview iInfo = sysInfo.getInputMethodOverview();
-		WindowOverview wInfo = sysInfo.getWindowOverview();
-		boolean keyboardVisible = wInfo.isKeyboardVisible();
-		if (keyboardVisible) {ex.applyEvent(closeKeyboard);}
-		WindowInformation focusedWin = wInfo.getFocusedWindow();
-		while(focusedWin == null){ focusedWin = wInfo.getFocusedWindow(); }
+		result.iInfo = sysInfo.getInputMethodOverview();
+		result.wInfo = sysInfo.getWindowOverview();
+		result.keyboardVisible = result.wInfo.isKeyboardVisible();
+		if (result.keyboardVisible) {ex.applyEvent(closeKeyboard);}
+		result.focusedWin = result.wInfo.getFocusedWindow();
 		
-		LayoutNode node = null;
-		int scope = focusedWin.isWithinApplciation(app);
-		if( scope == WindowInformation.SCOPE_WITHIN ){
-			node = viewInfoView.loadWindowData();
+		int tryCount = 0;
+		while(result.focusedWin == null && tryCount < 3){ 
+			result.focusedWin = result.wInfo.getFocusedWindow(); 
+			try { Thread.sleep(100+100 * tryCount); } catch (InterruptedException e) { }
+			tryCount += 1;
 		}
-		EventExecutionResult result = new EventExecutionResult();
-		if( scope == WindowInformation.SCOPE_LAUNCHER ){
+		if(result.focusedWin == null){
+			result.errorCode = EventExecutionResult.ERROR_FOCUS_WDINDOW;
+			return result; 
+		}
+		
+		result.scope = result.focusedWin.isWithinApplciation(app);
+		if( result.scope == WindowInformation.SCOPE_LAUNCHER ){
 			result.predefinedUI = GraphicalLayout.Launcher;
 		}
-		result.node = node;
-		result.scope = scope;
-		result.iInfo = iInfo;
-		result.wInfo = wInfo;
-		result.focusedWin = focusedWin;
-		result.keyboardVisible = keyboardVisible;
-		result.sequences = sequences;
-		result.logcatReading = lines;
-		result.isCrashed = logcatReader.isCrashed();
+		if( result.scope == WindowInformation.SCOPE_WITHIN ){
+			int i = 0;
+			while(result.node == null && i<3){
+				try{
+					Thread.sleep(200 + 500 * i);
+					result.node = viewInfoView.loadWindowData();
+				}catch(Exception e){ e.printStackTrace(); }
+				i++;
+			}
+			if(result.node == null){
+				result.errorCode = EventExecutionResult.ERROR_LOAD_LAYOUT;
+				return result; 
+			}
+		}   
 		return result;
 	}
 	

@@ -9,11 +9,12 @@ public class GraphicalLayout implements Serializable{
 	String actName;
 	LayoutNode layout;
 	public int index;
-	public final static GraphicalLayout Launcher;
 	public final static String LAUNCHER_NAME = "Launcher";
+	public final static String ERRORSCENE_NAME = "ErrorScene";
+	public final static GraphicalLayout Launcher = new GraphicalLayout(LAUNCHER_NAME,null); 
+	public final static GraphicalLayout ErrorScene = new GraphicalLayout(LAUNCHER_NAME,null); 
 	public final List<Event> candidates = new ArrayList<Event>();
 	private static int gIndex = 0;
-	static{ Launcher = new GraphicalLayout(LAUNCHER_NAME,null); }
 	
 	public GraphicalLayout(String actName, LayoutNode node){
 		this.layout = node;

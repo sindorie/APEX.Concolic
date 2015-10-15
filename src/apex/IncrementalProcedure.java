@@ -1,8 +1,6 @@
 package apex;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import components.EventSummaryManager;
@@ -79,6 +77,7 @@ public class IncrementalProcedure {
 			check();
 			driver.prepare();
 			try{ loop(); }catch(Exception e){ e.printStackTrace(); }
+			driver.finish();
 		}
 	}
 }

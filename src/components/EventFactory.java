@@ -19,11 +19,14 @@ public class EventFactory {
 			RESTART_SLEEP = 2000,  
 			REINSTALL_SLEEP = 2000,
 			PRESS_SLEEP = 1500, 
-			ONCLICK_SLEEP = 1500;
+			ONCLICK_SLEEP = 1500,
+			UNINSTALL_SLEEP = 2000
+			;
 	
 	private final static String 
 			UNDEFINED = "undefined",//, EMPTY = "empty", UPDATE = "update";
 			LAUNCH = "launch", REINSTALL = "reinstall", //, RESTART = "restart";
+			UNINSTALL = "uninstall",
 			PRESS = "press", 
 			ONCLICK = "android:onClick",
 			TEXT_INPUT = "text input";
@@ -34,10 +37,19 @@ public class EventFactory {
 			iREINSTALL = 2, 
 			iPRESS = 3, 
 			iONCLICK = 4, //, iRESTART = 1;
-			iINPUT = 5;
+			iINPUT = 5,
+			iUNINSTALL = 6
+			;
 	
 	private EventFactory(){}
 	
+	public static Event createUninstallEvent(String pkgName){
+		Event e = new Event();
+		e.source = null;
+		e.eventType = iUNINSTALL;
+		e.putAttribute(EventFactory.att_pkgName, pkgName);
+		return e;
+	}
 	
 	public static Event createReinstallEvent(String pkgName, String path){
 		Event e = new Event();
@@ -124,6 +136,8 @@ public class EventFactory {
 			return iONCLICK;
 		}else if(eventString.equals(TEXT_INPUT)){
 			return iINPUT;
+		}else if(eventString.equals(UNINSTALL)){
+			return iUNINSTALL;
 		}else return iUNDEFINED;
 	}
 	
@@ -134,6 +148,7 @@ public class EventFactory {
 		case iPRESS: 	return EventFactory.PRESS_SLEEP;
 		case iONCLICK: 	return EventFactory.ONCLICK_SLEEP;
 		case iINPUT: return EventFactory.ONCLICK_SLEEP;
+		case iUNINSTALL: return EventFactory.UNINSTALL_SLEEP;
 		case iUNDEFINED:
 		default: return EventFactory.NON_SLEEP;
 		}
@@ -145,6 +160,7 @@ public class EventFactory {
 		case iPRESS: 	return PRESS;
 		case iONCLICK: 	return ONCLICK;
 		case iINPUT:	return TEXT_INPUT;
+		case iUNINSTALL: return UNINSTALL;
 		}
 		return UNDEFINED;
 	}

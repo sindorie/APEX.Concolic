@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.Stack;
 
+import javax.swing.JFrame;
+import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeNode;
 
@@ -76,6 +78,54 @@ public class TreeUtility {
 	    return row;
 	} // expandJTreeNode()
 	
+	public static Expression constructFromString(String line){
+		StringBuilder sb = null;
+		List<String> tokens = new ArrayList<>();
+		for(int i = 0;i<line.length() ; i++){
+			char c = line.charAt(i);
+			if(c == '('){
+				if(sb!= null){
+					tokens.add(sb.toString());
+					sb = null;
+				}
+				tokens.add("(");
+			}else if(c==')'){
+				if(sb!= null){
+					tokens.add(sb.toString());
+					sb = null;
+				}
+				tokens.add(")");
+			}else if((c+"").matches("\\s")){
+				if(sb!= null){
+					tokens.add(sb.toString());
+					sb = null;
+				}
+			}else{ if(sb==null){sb = new StringBuilder();} sb.append(c); }
+		}	
+		global_token_index= 0;
+		return recursiveBuildExpression(tokens);
+	}
+	private static int global_token_index=0;
+	private static Expression recursiveBuildExpression(List<String> tokens){
+		String first = tokens.get(global_token_index);global_token_index++;
+		if(first.equals(")")){
+			return null;
+		}else if(first.equals("(")){
+			String second = tokens.get(global_token_index);global_token_index++;
+			if(second.equals(")")){
+				return new Expression("");
+			}
+			Expression root = new Expression(second);
+			while(true){
+				Expression expre = recursiveBuildExpression(tokens);
+				if(expre == null) break;
+				root.add(expre);
+			}
+			return root;
+		}else{
+			return new Expression(first);
+		}
+	}
 	
 	public final static String chunk = "    ";
 	public static List<Expression> textTreeToExpression_file(String fileName) throws FileNotFoundException{
@@ -276,5 +326,15 @@ public class TreeUtility {
 			}
 		});
 		return localCount;
+	}
+	
+	public static void showTree(TreeNode node){
+		JFrame frame = new JFrame();
+		JTree tree = new JTree(node);
+		TreeUtility.expandJTree(tree, -1);
+		frame.setSize(800, 600);
+		frame.getContentPane().add(tree);
+		frame.setVisible(true);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
 }

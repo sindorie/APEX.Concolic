@@ -20,8 +20,8 @@ public class EventExecutor {
 	}
 	
 	public void applyEvent(Event event, boolean sleep){
+		Common.TRACE(event.toString());
 		CommandLine.clear();
-		if(Common.DEBUG) System.out.println(event);
 		int type = event.getEventType();
 		switch(type){
 		case EventFactory.iLAUNCH:{
@@ -29,6 +29,11 @@ public class EventExecutor {
 			String actName = (String) event.getAttribute(EventFactory.att_actName);
 			String shellCommand = "shell am start " + packageName + "/" + actName;
 			CommandLine.executeADBCommand(shellCommand, serial);
+		}break;
+		case EventFactory.iUNINSTALL:{
+			String packageName = (String) event.getAttribute(EventFactory.att_pkgName);
+			CommandLine.executeADBCommand("shell pm clear "+packageName, serial);
+			CommandLine.executeADBCommand("uninstall "+packageName, serial);
 		}break;
 		case EventFactory.iREINSTALL:{
 			String packageName = (String) event.getAttribute(EventFactory.att_pkgName);

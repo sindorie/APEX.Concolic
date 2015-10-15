@@ -68,23 +68,45 @@ public class ExuectionDriver {
 		}
 		Common.TRACE();
 		EventExecutionResult finalResult = eExecution.carrayout(event);
-		if(finalResult == null){
-			System.out.println("Final reuslt is null for execution result");
-			return true;
-		}//something is wrong; -- Cannot retrieve focused window
-		EventSummaryPair esPair = Common.summaryManager.findSummary(event, finalResult.sequences);
-		GraphicalLayout dest 
-			= finalResult.predefinedUI != null ? finalResult.predefinedUI
-			: Common.model.findOrConstructUI(finalResult.focusedWin.actName, finalResult.node);
-		esPair.setTarget(dest);
-		currentUI = dest;
-		List<Event> newEvents = Common.model.update(esPair, finalResult);
-		if(newEvents != null) newEventList.addAll(newEvents);
-		
-		Common.TRACE("Generate events size:"+((newEvents != null)?newEvents.size():0 ));
-		Common.model.record(esPair);
-		checkTargetReach(esPair);
-		Common.TRACE();
+		if(finalResult.errorCode != EventExecutionResult.NO_ERROR){
+			Common.TRACE("Execution error: "+EventExecutionResult.codeToString(finalResult.errorCode));
+			//TODO to improve; currently reinstall app and reset to launcher
+			switch(finalResult.errorCode){
+			case EventExecutionResult.ERROR_LOAD_LAYOUT:
+			case EventExecutionResult.ERROR_FOCUS_WDINDOW:{
+				EventSummaryPair crashEvent = Common.summaryManager.findSummary(event, null);
+				crashEvent.setTarget(finalResult.predefinedUI); //should be the ErrorScene
+				Common.model.record(crashEvent);
+				eExecution.reinstall();
+				currentUI = GraphicalLayout.Launcher;
+			}break;
+			// the followings are currently not implemented and should not happen
+			case EventExecutionResult.ERROR_RETRIEVE_WIN_INFO: 
+			case EventExecutionResult.ERROR_READ_LOGCAT:
+			case EventExecutionResult.ERROR_CHECK_KEYBOARD:
+			}
+		}else if(finalResult.isCrashed){ //application crashed
+			Common.TRACE("Application has crashed");
+			EventSummaryPair crashEvent = Common.summaryManager.findSummary(event, null);
+			crashEvent.setTarget(finalResult.predefinedUI); //should be the ErrorScene
+			Common.model.record(crashEvent);
+			eExecution.reinstall();
+			currentUI = GraphicalLayout.Launcher;
+		}else{
+			EventSummaryPair esPair = Common.summaryManager.findSummary(event, finalResult.sequences);
+			GraphicalLayout dest 
+				= finalResult.predefinedUI != null ? finalResult.predefinedUI
+				: Common.model.findOrConstructUI(finalResult.focusedWin.actName, finalResult.node);
+			esPair.setTarget(dest);
+			currentUI = dest;
+			List<Event> newEvents = Common.model.update(esPair, finalResult);
+			if(newEvents != null) newEventList.addAll(newEvents);
+			
+			Common.TRACE("Generate events size:"+((newEvents != null)?newEvents.size():0 ));
+			Common.model.record(esPair);
+			checkTargetReach(esPair);
+			Common.TRACE();
+		}
 		return true;
 	}
 	
@@ -104,5 +126,9 @@ public class ExuectionDriver {
 				Collections.sort(seqRecord, new ListSZComparator());
 			}
 		}
+	}
+	
+	void finish(){
+		this.eExecution.clearup();
 	}
 }

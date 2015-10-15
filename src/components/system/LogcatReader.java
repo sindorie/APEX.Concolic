@@ -162,8 +162,6 @@ public class LogcatReader {
 			if(readProcess != null){
 				readProcess.destroyForcibly();
 			}
-//			if(in != null)
-//				try { in.close(); } catch (IOException e) { e.printStackTrace(); }
 		}
 	}
 	

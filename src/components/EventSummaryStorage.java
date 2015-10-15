@@ -73,6 +73,7 @@ public class EventSummaryStorage implements Serializable{
 	public EventSummaryPair remove(Event event, String signature, List<String> expandedLog){
 		int size = (expandedLog == null? 0: expandedLog.size());
 		List<EventSummaryPair> list = storage.get(event, signature, size);
+		if(list == null || list.isEmpty()) return null;
 		if(expandedLog == null || expandedLog.isEmpty()){
 			if(list.size() > 0 ){ return list.remove(0); /*Logically can only have one element at most*/
 			}else{ return null; } 

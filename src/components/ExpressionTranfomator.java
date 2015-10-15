@@ -117,13 +117,24 @@ public class ExpressionTranfomator {
 		}
 	}
 	
+	
+	public Expression recusiveBuildDispatcher(Expression input){
+		if(input == null) return null;
+		Expression result = null;
+		try{
+			result = internal_dispatcher(input);
+		}catch(Exception e){ Common.TRACE(input.toYicesStatement()); throw e; }
+		return result;
+	}
+	
+	
 	/**
 	 * Recursive transform the tree. 
 	 * Play as a dispatcher
 	 * @param input
-	 * @return
+	 * @return 
 	 */
-	public Expression recusiveBuildDispatcher(Expression input){
+	private Expression internal_dispatcher(Expression input){
 		String content = input.getContent().trim();
 		Expression result = null;
 		if(content.equalsIgnoreCase(KW_FINSTANCE) ||
@@ -145,6 +156,9 @@ public class ExpressionTranfomator {
 		}else if(content.equalsIgnoreCase(KW_RETURN)){
 			//should not occur
 //			return null;
+		}else if(content.equals(KW_NULL)){
+			//currently ignore it TODO
+			result = null;
 		}else if(content.matches(tmpVairableMatcher)){
 		}else if(input.isLeaf()){
 			//TODO may want to check content
@@ -208,7 +222,7 @@ public class ExpressionTranfomator {
 		newNode.add(new Expression(SYNTHESIS));//label as synthetic variable
 		
 		//create the size symbolic
-		Expression szRight_sym = recusiveBuildDispatcher(sizeNode);
+		Expression szRight_sym = internal_dispatcher(sizeNode);
 		if(szRight_sym == null) return null;
 		Expression szLeft_sym = findCorrespondingArraySizeVar(newNode);
 		Expression sizeAssignmentSym = new Expression("=");
@@ -248,7 +262,7 @@ public class ExpressionTranfomator {
 			}else if(content_op1.equals("0")){
 				formated_op1 = new Expression("false");
 			}else{
-				formated_op1 = recusiveBuildDispatcher(op1);
+				formated_op1 = internal_dispatcher(op1);
 			}
 			
 			if(content_op2.equals("1")){
@@ -256,7 +270,7 @@ public class ExpressionTranfomator {
 			}else if(content_op2.equals("0")){
 				formated_op2 = new Expression("false");
 			}else{
-				formated_op2 = recusiveBuildDispatcher(op2);
+				formated_op2 = internal_dispatcher(op2);
 			}
 			
 			if(formated_op1 == null || formated_op2 == null) return null;
@@ -275,7 +289,7 @@ public class ExpressionTranfomator {
 			}else if(content_op1.equals("0")){
 				formated_op1 = new Expression("false");
 			}else{
-				formated_op1 = recusiveBuildDispatcher(op1);
+				formated_op1 = internal_dispatcher(op1);
 			}
 			
 			if(formated_op1 == null) return null;
@@ -417,9 +431,9 @@ public class ExpressionTranfomator {
 			Expression index = (Expression) input.getChildAt(1).getChildAt(0);
 			Expression val = (Expression) input.getChildAt(2);
 			
-			Expression formated_arr = recusiveBuildDispatcher(arr);
-			Expression formated_index = recusiveBuildDispatcher(index);
-			Expression formated_val = recusiveBuildDispatcher(val);
+			Expression formated_arr = internal_dispatcher(arr);
+			Expression formated_index = internal_dispatcher(index);
+			Expression formated_val = internal_dispatcher(val);
 			
 			if(formated_arr==null ||  formated_index==null || formated_val==null){
 				return null;
@@ -528,8 +542,8 @@ public class ExpressionTranfomator {
 		Expression op1 = (Expression) input.getChildAt(0);
 		Expression op2 = (Expression) input.getChildAt(1);
 		
-		Expression formated_op1 = recusiveBuildDispatcher(op1);
-		Expression formated_op2 = recusiveBuildDispatcher(op2);
+		Expression formated_op1 = internal_dispatcher(op1);
+		Expression formated_op2 = internal_dispatcher(op2);
 		if(formated_op1 == null || formated_op2 == null){
 			return null;
 		}
@@ -568,6 +582,7 @@ public class ExpressionTranfomator {
 		//'invoke {v#...' 'Class' 'method' 'arguments' 'return'
 //		String[] decoded = content.split("},\\s|(->)|\\(|\\)");
 		String[] decoded = content.split("->|\\(|\\)");
+//		System.out.println(content+"  :  "+Arrays.toString(decoded));
 		Pattern argP = Pattern.compile("((L[a-zA-Z0-9\\$_\\/]*;)|[ZBSCIJFD])\\[*");
 		Matcher argM = argP.matcher(decoded[2]);
 		List<String> argTypes = new ArrayList<String>();
@@ -599,7 +614,7 @@ public class ExpressionTranfomator {
 				
 				
 				Expression strAppend = new Expression("str.++");
-				Expression str1 = recusiveBuildDispatcher(fStr);
+				Expression str1 = internal_dispatcher(fStr);
 				if(str1 == null) return null;
 				strAppend.add(str1);
 				if(type.equals("I")){
@@ -610,7 +625,7 @@ public class ExpressionTranfomator {
 					 *		+ int
 					 */
 					Expression strP = new Expression("int.to.str");
-					Expression str2 = recusiveBuildDispatcher(sStr);
+					Expression str2 = internal_dispatcher(sStr);
 					if(str2 == null) return null;
 					strP.add(str2);
 					strAppend.add(strP);
@@ -629,7 +644,7 @@ public class ExpressionTranfomator {
 					}else if(sContent.equals("0")){
 						strAppend.add(new Expression("\"false\""));
 					}else{
-						Expression str2 = recusiveBuildDispatcher(sStr);
+						Expression str2 = internal_dispatcher(sStr);
 						if(str2 == null) return null;
 						Expression ifStmt = buildIfStmt(str2, 
 								new Expression("\"true\""),new Expression("\"false\""));
@@ -637,7 +652,7 @@ public class ExpressionTranfomator {
 					}
 				}else if(type.equals(STRING_CLZ)||
 						type.equals(STRINGBUILDER_CLZ) ){
-					Expression str2 = recusiveBuildDispatcher(sStr);
+					Expression str2 = internal_dispatcher(sStr);
 					strAppend.add(str2);
 					if(str2 == null) return null;
 				}else{
@@ -650,7 +665,7 @@ public class ExpressionTranfomator {
 				}else{ return strAppend; }
 			}else if(method.equals("toString")){
 				Expression obj = (Expression) input.getChildAt(1);
-				return recusiveBuildDispatcher(obj);
+				return internal_dispatcher(obj);
 			}
 		}else if(clz.equalsIgnoreCase(STRING_CLZ)){
 			if(method.equals("contains")){
@@ -658,8 +673,10 @@ public class ExpressionTranfomator {
 				Expression container = (Expression) input.getChildAt(1);
 				Expression containee = (Expression) input.getChildAt(2);
 				
-				Expression transformedContainer = recusiveBuildDispatcher(container);
-				Expression transformedContainee = recusiveBuildDispatcher(containee);
+				Expression transformedContainer = internal_dispatcher(container);
+				Expression transformedContainee = internal_dispatcher(containee);
+				if(transformedContainer == null || transformedContainee == null) return null;
+				
 				
 				Expression newNode = new Expression("str.contains");
 				newNode.add(transformedContainer);
@@ -669,8 +686,8 @@ public class ExpressionTranfomator {
 				Expression obj = (Expression) input.getChildAt(1);
 				Expression startIndex = (Expression) input.getChildAt(2);
 				
-				Expression t_obj = recusiveBuildDispatcher(obj);
-				Expression t_startIndex = recusiveBuildDispatcher(startIndex);
+				Expression t_obj = internal_dispatcher(obj);
+				Expression t_startIndex = internal_dispatcher(startIndex);
 				if(t_obj == null || t_startIndex == null) return null;
 				
 				switch(argTypes.size()){
@@ -689,7 +706,7 @@ public class ExpressionTranfomator {
 				}
 				case 2:{ //subString(i, j);
 					Expression endIndex = (Expression) input.getChildAt(3);
-					Expression t_endIndex = recusiveBuildDispatcher(endIndex);
+					Expression t_endIndex = internal_dispatcher(endIndex);
 					if(t_endIndex == null)return null;
 					
 					Expression newNode = new Expression("str.substr");
@@ -706,8 +723,8 @@ public class ExpressionTranfomator {
 				Expression obj = (Expression) input.getChildAt(1);
 				Expression prefix = (Expression) input.getChildAt(2);
 				
-				Expression t_obj = recusiveBuildDispatcher(obj);
-				Expression t_prefix = recusiveBuildDispatcher(prefix);
+				Expression t_obj = internal_dispatcher(obj);
+				Expression t_prefix = internal_dispatcher(prefix);
 				
 				if(obj == null || t_prefix == null) return null;
 				Expression newNode = new Expression("str.prefixof");
@@ -718,8 +735,8 @@ public class ExpressionTranfomator {
 				Expression obj = (Expression) input.getChildAt(1);
 				Expression postfix = (Expression) input.getChildAt(2);
 				
-				Expression t_obj = recusiveBuildDispatcher(obj);
-				Expression t_postfix = recusiveBuildDispatcher(postfix);
+				Expression t_obj = internal_dispatcher(obj);
+				Expression t_postfix = internal_dispatcher(postfix);
 				
 				if(obj == null || t_postfix == null) return null;
 				Expression newNode = new Expression("str.suffixof");
@@ -730,7 +747,7 @@ public class ExpressionTranfomator {
 //				System.out.println(input.toYicesStatement());
 				
 				Expression obj = (Expression) input.getChildAt(1);
-				Expression t_obj = recusiveBuildDispatcher(obj);
+				Expression t_obj = internal_dispatcher(obj);
 				if(t_obj == null)return null;
 				
 				Expression newNode = new Expression("str.len");
@@ -895,7 +912,8 @@ public class ExpressionTranfomator {
 	KW_AGET = 			"$aget",
 	KW_UPDATE = 		"update",
 	KW_STORE = 			"store",
-	KW_SELECT = 		"select"
+	KW_SELECT = 		"select",
+	KW_NULL =			"null"
 	;
 	
 	static Map<String,String> typeMap = new HashMap<String,String>();
@@ -934,7 +952,7 @@ public class ExpressionTranfomator {
 				"add", "+",
 				"sub", "-",
 				"mul", "*",
-				"dev", "/",
+				"div", "/",
 				"and", "and",
 				"or", "or",
 				"xor", "xor",

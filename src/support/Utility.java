@@ -1,7 +1,9 @@
 package support;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -10,9 +12,21 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 public class Utility {
 	
+	
+	public static List<String> fileToLines(String name) throws FileNotFoundException{
+		File f = new File(name);
+		Scanner sc = new Scanner(f);
+		List<String> arr = new ArrayList<>();
+		while(sc.hasNextLine()){
+			String line = sc.nextLine().trim();
+			if(line.isEmpty() ==false) arr.add(line);
+		}
+		return arr;
+	}
 	
 	/**
 	 * Dump a Serializable object to a file
