@@ -25,8 +25,10 @@ import apex.symbolic.SymbolicExecution;
 
 public class Common {
 	public static UIModel model;
-	public static SymbolicExecution symbolic;
 	public static EventSummaryManager summaryManager;
+	
+	public static SymbolicExecution symbolic;
+	public static EventExecution eExecution;
 	
 	public static String apkPath;
 	public static String serial;
@@ -36,7 +38,7 @@ public class Common {
 	public static ExuectionDriver driver;
 	
 	public static StaticApp app;
-	public static boolean DEBUG = true;
+	public static boolean DEBUG = true, useJDB = true;
 	
 	public final static List<String> buffer = new ArrayList<>();
 	public static void addErrorInfo(String msg){ buffer.add(msg); }

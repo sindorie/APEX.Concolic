@@ -1,11 +1,15 @@
 package components;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import apex.Common;
 import support.CommandLine;
 
 public class EventExecutor { 
 	private String serial;
 	private boolean noReinstall = false;
+	private List<ActionListener> listener = new ArrayList<>();
 	
 	public EventExecutor(String serial){
 		this.serial = serial;
@@ -19,9 +23,15 @@ public class EventExecutor {
 		this.noReinstall = noReinstall;
 	}
 	
+	public void addListner(ActionListener lis){
+		listener.add(lis);
+	}
+	
 	public void applyEvent(Event event, boolean sleep){
 		Common.TRACE(event.toString());
 		CommandLine.clear();
+		for(ActionListener lis : listener){lis.beforeEventExecution(event);}
+		
 		int type = event.getEventType();
 		switch(type){
 		case EventFactory.iLAUNCH:{
@@ -93,6 +103,13 @@ public class EventExecutor {
 			try { Thread.sleep(EventFactory.getNeededSleepDuration(type));
 			} catch (InterruptedException e) { }
 		}
+
+		for(ActionListener lis : listener){lis.afterEventExecution(event);}
+	}
+	
+	public interface ActionListener{
+		public void beforeEventExecution(Event event);
+		public void afterEventExecution(Event event);
 	}
 }
 

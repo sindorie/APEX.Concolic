@@ -176,7 +176,7 @@ public class LogcatReader {
 		}finally{
 			String line = sb.toString();
 			if(line.isEmpty() == false) processline(line);
-			if(readProcess != null){ readProcess.destroyForcibly(); }
+			if(readProcess != null){ readProcess.destroy();; }
 		}
 	}
 

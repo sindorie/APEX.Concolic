@@ -16,35 +16,34 @@ import components.system.LogcatReader;
 import components.system.WindowInformation;
 
 public class EventExecution {
-		
-	Event closeKeyboard = EventFactory.createCloseKeyboardEvent();
-	EventExecutor ex;
-	InformationCollector sysInfo;
-	ViewDeviceInfo viewInfoView;
-	LogcatReader logcatReader;
-	UIModel model;
-	StaticApp app; 
+	private static Event closeKeyboard = EventFactory.createCloseKeyboardEvent();
+	private EventExecutor ex;
+	private InformationCollector sysInfo;
+	private ViewDeviceInfo viewInfoView;
+	private LogcatReader logcatReader;
 	
-	public EventExecution(String serial, UIModel model, StaticApp app){
-		ex = new EventExecutor(serial);
-		sysInfo = new InformationCollector(serial);
-		viewInfoView = new ViewDeviceInfo(serial);
-		logcatReader = new LogcatReader(serial);
+	public EventExecution(){
+		ex = new EventExecutor(Common.serial);
+		sysInfo = new InformationCollector(Common.serial);
+		viewInfoView = new ViewDeviceInfo(Common.serial);
+		logcatReader = new LogcatReader(Common.serial);
 		//maxTime, minTime, duration, sleepTime, startSleep
 		logcatReader.setTime(5000, 100, 300, 50, 100);
-		this.model = model;
-		this.app = app;
+		
+		if(Common.useJDB){
+			
+		}
 	}
 	
 	/**
 	 * Ask the program to reintall the application
 	 */
 	public void reinstall(){
-		String pkgName = this.app.getPackageName();
-		ex.applyEvent(EventFactory.createReinstallEvent(pkgName, app.getInstrumentedApkPath()));
+		String pkgName = Common.app.getPackageName();
+		ex.applyEvent(EventFactory.createReinstallEvent(pkgName, Common.app.getInstrumentedApkPath()));
 		Common.TRACE("Stdout:"+CommandLine.getLatestStdoutMessage());
 		Common.TRACE("Stderr:"+CommandLine.getLatestStdoutMessage());
-		model.hasReinstalled();
+		Common.model.hasReinstalled();
 		ex.applyEvent(EventFactory.CreatePressEvent(null, KeyEvent.KEYCODE_HOME));	
 	}
 	
@@ -52,7 +51,7 @@ public class EventExecution {
 	 * Should be called before the termination of concolic execution if normal execution
 	 */
 	public void clearup(){
-		String pkgName = this.app.getPackageName();
+		String pkgName = Common.app.getPackageName();
 		ex.applyEvent(EventFactory.createUninstallEvent(pkgName));
 	}
 	
@@ -135,7 +134,7 @@ public class EventExecution {
 			return result; 
 		}
 		
-		result.scope = result.focusedWin.isWithinApplciation(app);
+		result.scope = result.focusedWin.isWithinApplciation(Common.app);
 		if( result.scope == WindowInformation.SCOPE_LAUNCHER ){
 			result.predefinedUI = GraphicalLayout.Launcher;
 		}
@@ -170,7 +169,7 @@ public class EventExecution {
 				if( sysInfo.getWindowOverview().isKeyboardVisible() ){
 					ex.applyEvent(closeKeyboard);
 				}
-				if(model != null) model.record(eList.get(i));
+				if(Common.model != null) Common.model.record(eList.get(i));
 			}
 			return null;
 		}else{
@@ -180,7 +179,7 @@ public class EventExecution {
 				if( sysInfo.getWindowOverview().isKeyboardVisible() ){
 					ex.applyEvent(closeKeyboard);
 				}
-				if(model != null) model.record(eList.get(i));
+				if(Common.model != null) Common.model.record(eList.get(i));
 			}
 			return carrayout(eList.get(eList.size()-1).getEvent());
 		}

@@ -43,6 +43,7 @@ public class IncrementalProcedure {
 		Common.model = new UIModel();
 		
 		Common.driver = new ExuectionDriver();
+		Common.eExecution = new EventExecution();
 	}
 	void check(){
 		Common.println("Basic info checking");

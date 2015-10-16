@@ -15,24 +15,21 @@ import components.ListSZComparator;
 public class ExuectionDriver {
 	
 	Stack<Event> newEventList = new Stack<Event>();
-	EventExecution eExecution = new EventExecution(Common.serial, Common.model, Common.app);
 	GraphicalLayout currentUI = GraphicalLayout.Launcher;
 	private boolean enableStepInspect = false;
 	private Scanner sc;
 	
-	 void prepare(){
-		 this.eExecution.reinstall();
-		 String pkgName = Common.app.getPackageName();
-		 String actName = Common.app.getMainActivity().getJavaName();
-		 newEventList.add(EventFactory.createLaunchEvent(
-				 GraphicalLayout.Launcher, pkgName, actName));
+	void prepare(){
+		Common.eExecution.reinstall();
+		String pkgName = Common.app.getPackageName();
+		String actName = Common.app.getMainActivity().getJavaName();
+		newEventList.add(EventFactory.createLaunchEvent(
+				GraphicalLayout.Launcher, pkgName, actName));
 		 
-		 if(enableStepInspect){
-			 sc = new Scanner(System.in);
-		 }
-	 }
-	 
-	 
+		if(enableStepInspect){
+			sc = new Scanner(System.in);
+		}
+	}
 	
 	public Stack<Event> getNewEventList() {
 		return newEventList;
@@ -79,10 +76,10 @@ public class ExuectionDriver {
 			event = newEventList.pop();
 			Common.TRACE("Pop new Event: "+event.toString());
 			if(!event.getSource().equals(this.currentUI)){
-				if(eExecution.reposition(currentUI, event.getSource())){
+				if(Common.eExecution.reposition(currentUI, event.getSource())){
 					this.currentUI = event.getSource();
 				}else{
-					eExecution.reinstall();
+					Common.eExecution.reinstall();
 					this.currentUI = GraphicalLayout.Launcher;
 					System.out.println("New event reposition failure");
 					return true; 
@@ -95,8 +92,8 @@ public class ExuectionDriver {
 			if(validationCandidate.isExecuted()) return true; //should not happen
 			List<EventSummaryPair> solvingSequence = Common.summaryManager.getValidationSequence(validationCandidate);
 			if(solvingSequence == null || solvingSequence.isEmpty()) return true;
-			eExecution.reinstall();
-			EventExecutionResult midResult = eExecution.doSequence(solvingSequence, true);
+			Common.eExecution.reinstall();
+			EventExecutionResult midResult = Common.eExecution.doSequence(solvingSequence, true);
 			GraphicalLayout focuedWin 
 				= midResult.predefinedUI != null ? midResult.predefinedUI
 				: Common.model.findOrConstructUI(midResult.focusedWin.actName, midResult.node);
@@ -109,7 +106,7 @@ public class ExuectionDriver {
 			return false;
 		}
 		Common.TRACE();
-		EventExecutionResult finalResult = eExecution.carrayout(event);
+		EventExecutionResult finalResult = Common.eExecution.carrayout(event);
 		if(finalResult.errorCode != EventExecutionResult.NO_ERROR){
 			Common.TRACE("Execution error: "+EventExecutionResult.codeToString(finalResult.errorCode));
 			//TODO to improve; currently reinstall app and reset to launcher
@@ -119,7 +116,7 @@ public class ExuectionDriver {
 				EventSummaryPair crashEvent = Common.summaryManager.findSummary(event, null);
 				crashEvent.setTarget(finalResult.predefinedUI); //should be the ErrorScene
 				Common.model.record(crashEvent);
-				eExecution.reinstall();
+				Common.eExecution.reinstall();
 				currentUI = GraphicalLayout.Launcher;
 			}break;
 			// the followings are currently not implemented and should not happen
@@ -132,7 +129,7 @@ public class ExuectionDriver {
 			EventSummaryPair crashEvent = Common.summaryManager.findSummary(event, null);
 			crashEvent.setTarget(finalResult.predefinedUI); //should be the ErrorScene
 			Common.model.record(crashEvent);
-			eExecution.reinstall();
+			Common.eExecution.reinstall();
 			currentUI = GraphicalLayout.Launcher;
 		}else{
 			EventSummaryPair esPair = Common.summaryManager.findSummary(event, finalResult.sequences);
@@ -179,6 +176,6 @@ public class ExuectionDriver {
 	}
 	
 	void finish(){
-		this.eExecution.clearup();
+		Common.eExecution.clearup();
 	}
 }
