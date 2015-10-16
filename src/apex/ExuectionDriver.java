@@ -3,6 +3,7 @@ package apex;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Scanner;
 import java.util.Stack;
 
 import components.Event;
@@ -16,6 +17,8 @@ public class ExuectionDriver {
 	Stack<Event> newEventList = new Stack<Event>();
 	EventExecution eExecution = new EventExecution(Common.serial, Common.model, Common.app);
 	GraphicalLayout currentUI = GraphicalLayout.Launcher;
+	private boolean enableStepInspect = false;
+	private Scanner sc;
 	
 	 void prepare(){
 		 this.eExecution.reinstall();
@@ -23,14 +26,53 @@ public class ExuectionDriver {
 		 String actName = Common.app.getMainActivity().getJavaName();
 		 newEventList.add(EventFactory.createLaunchEvent(
 				 GraphicalLayout.Launcher, pkgName, actName));
+		 
+		 if(enableStepInspect){
+			 sc = new Scanner(System.in);
+		 }
 	 }
+	 
+	 
 	
+	public Stack<Event> getNewEventList() {
+		return newEventList;
+	}
+
+	public void setNewEventList(Stack<Event> newEventList) {
+		this.newEventList = newEventList;
+	}
+
+
+
 	/**
 	 * drive the execution
 	 * @return if should 
 	 */	
 	boolean kick(){
 		Common.TRACE();
+		
+		if(enableStepInspect){
+			System.out.println("User intervention: ");
+			while(true){
+				String line = sc.nextLine().trim();
+				if(line.equals("exit")){
+					System.exit(0);
+				}else if(line.equals("graph")){
+					Common.model.showGUI(false);
+				}else if(line.equals("next")){
+					if(newEventList.isEmpty() == false){
+						System.out.println("Response: "+newEventList.peek());
+					}else if(Common.summaryManager.hasNext()){
+						System.out.println("Response: "+Common.summaryManager.peek());
+					}else{
+						System.out.println("Response: "+"Empty");
+					}
+				}else if(line.equalsIgnoreCase("a")){
+					enableStepInspect = false; break;
+				}else if(line.isEmpty()) break;
+			}
+		}
+		
 		Event event = null;
 		EventSummaryPair validationCandidate = null;
 		if(!newEventList.isEmpty()){
@@ -102,11 +144,19 @@ public class ExuectionDriver {
 			List<Event> newEvents = Common.model.update(esPair, finalResult);
 			if(newEvents != null) newEventList.addAll(newEvents);
 			
-			Common.TRACE("Generate events size:"+((newEvents != null)?newEvents.size():0 ));
+			if(Common.DEBUG){
+				Common.TRACE(dest.toString());
+				Common.TRACE("Generate events size:"+((newEvents != null)?newEvents.size():0 ));
+				if(newEvents!= null){
+					for(Event nEvent : newEvents){
+						Common.TRACE(nEvent.toString());
+					}
+				}
+			}
 			Common.model.record(esPair);
 			checkTargetReach(esPair);
-			Common.TRACE();
-		}
+			Common.TRACE("Update current UI: "+dest.toString());
+		}	
 		return true;
 	}
 	

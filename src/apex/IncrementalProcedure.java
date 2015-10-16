@@ -8,7 +8,6 @@ import apex.staticFamily.StaticAppBuilder;
 import apex.symbolic.SymbolicExecution;
 
 public class IncrementalProcedure {
-	ExuectionDriver driver;
 	long startTime, maxDuration = -1;
 	boolean checkPrevious = false;
 	int iterationCount = 0;
@@ -43,7 +42,7 @@ public class IncrementalProcedure {
 		Common.summaryManager = new EventSummaryManager();
 		Common.model = new UIModel();
 		
-		driver = new ExuectionDriver();
+		Common.driver = new ExuectionDriver();
 	}
 	void check(){
 		Common.println("Basic info checking");
@@ -58,7 +57,7 @@ public class IncrementalProcedure {
 	void loop(){
 		startTime = System.currentTimeMillis();
 		while(  !isAllreached() && !isLimitReached()  ){
-			boolean status = driver.kick();
+			boolean status = Common.driver.kick();
 			iterationCount += 1;
 			if(status == false) break;
 		}
@@ -72,12 +71,16 @@ public class IncrementalProcedure {
 	public void go(){
 		if(checkPrevious){
 			//TODO
+			
+			
 		}else{
 			setup();
 			check();
-			driver.prepare();
+			Common.driver.prepare();
 			try{ loop(); }catch(Exception e){ e.printStackTrace(); }
-			driver.finish();
+			Common.driver.finish();
+			Common.saveData("generated/"+Common.apkPath.replaceAll("[^\\w]", ""));
 		}
+		
 	}
 }

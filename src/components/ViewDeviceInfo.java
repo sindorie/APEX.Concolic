@@ -44,10 +44,6 @@ public class ViewDeviceInfo {
 		adb = Configuration.getValue(Configuration.attADB);
 	}
 	
-	public String getSerial(){
-		return this.serial;
-	}
-	
 	/**
 	 * Use UIAutomator to retrieve information
 	 * @return

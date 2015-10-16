@@ -6,11 +6,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Stack;
-import java.util.concurrent.TimeUnit;
 
-import apex.Common;
 import apex.Configuration;
 import support.CommandLine;
 import support.Utility;
@@ -19,10 +16,10 @@ import support.Utility;
 public class LogcatReader {
 	
 	private String serial, adbLocation, errMsg;
-	private List<String> exeLog, tagLog;
+	private List<String> exeLog, tagLog, threadOrder;
 	private List<List<String>> methodLog;
 	private boolean isCrashed, reachMaxTime, hasException, readAll = false;
-	private long maxTime, minTime, startTime, duration ,lastUpdated, startSleep, sleepTime = 10;
+	private long maxTime, minTime, duration ,lastUpdated, startSleep, sleepTime = 10;
 	public final static String formatMatcher = "^\\w\\(\\s*\\d*:\\s*\\d*\\).*"; //beginningLabel = "-*.*";;
 	public final static String instrumentationMatcher = "^\\w\\(\\s*\\d*:\\s*\\d*\\) (Method_Starting,|Method_Returning,|execLog,).*";
 	
@@ -55,6 +52,8 @@ public class LogcatReader {
 	public boolean hasException() { return hasException;}
 	public String getErrMsg() { return errMsg; }
 	public boolean hasReachedMaxTime(){ return this.reachMaxTime; }
+	public List<String> getThreadOrder(){return this.threadOrder;}
+	
 	/**
 	 * Will not group method. Only group with thread
 	 * @param readAll
@@ -87,13 +86,37 @@ public class LogcatReader {
 	 * Take thread into consideration, group exelog by Thread and method root
 	 */
 	public void readFeedBack(){
+		try {
+			String command = null;
+			if(serial == null){ command = adbLocation +" logcat -v thread -s System.out";
+			}else{ command = adbLocation + " -s "+serial+" logcat -v thread -s System.out"; }
+			Process readProcess = Runtime.getRuntime().exec(command);
+			InputStream in = null, err = null;
+
+			in = readProcess.getInputStream();
+			err = readProcess.getErrorStream();
+			
+			resetInternalData();
+			readData(readProcess, in, err);
+			this.methodLog = process();	
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Read and process feedback from a given stream
+	 * @param in
+	 */
+	public void readFromStream(InputStream in){
 		resetInternalData();
-		readLogcat();
-		process();	
+		readData(null, in, null);
+		this.methodLog = process();
 	}
 	
 	private void resetInternalData(){
 		lastUpdated = -1;
+		threadOrder = new ArrayList<String>();
 		exeLog = new ArrayList<>();
 		tagLog = new ArrayList<>();
 		methodLog = new ArrayList<>();
@@ -103,19 +126,11 @@ public class LogcatReader {
 		errMsg = "";
 	}
 	
-	private void readLogcat(){
-		String command = null;
-		if(serial == null){ command = adbLocation +" logcat -v thread -s System.out";
-		}else{ command = adbLocation + " -s "+serial+" logcat -v thread -s System.out"; }
+	private void readData(Process readProcess, InputStream in, InputStream err){
 		StringBuilder sb = new StringBuilder();
-		Process readProcess = null;
-		InputStream in = null, err = null;
 		try{
-			readProcess = Runtime.getRuntime().exec(command);
-			in = readProcess.getInputStream();
-			err = readProcess.getErrorStream();
 			if(startSleep > 0)Thread.sleep(startSleep); 
-			startTime = System.currentTimeMillis();
+			long startTime = System.currentTimeMillis();
 			while(true){
 				int len = in.available();
 				boolean updated = false;
@@ -145,12 +160,14 @@ public class LogcatReader {
 				if(sleepTime>0)Thread.sleep(sleepTime);
 			}
 			
-			int len = err.available();
-			if(len > 0){
-				byte[] buf = new byte[len];
-				in.read(buf);
-				String msg = new String(buf).trim();
-				if(msg.isEmpty() == false) errMsg = msg;
+			if(err != null){
+				int len = err.available();
+				if(len > 0){
+					byte[] buf = new byte[len];
+					in.read(buf);
+					String msg = new String(buf).trim();
+					if(msg.isEmpty() == false) errMsg = msg;
+				}
 			}
 		}catch(Exception e){
 			e.printStackTrace();
@@ -159,17 +176,17 @@ public class LogcatReader {
 		}finally{
 			String line = sb.toString();
 			if(line.isEmpty() == false) processline(line);
-			if(readProcess != null){
-				readProcess.destroyForcibly();
-			}
+			if(readProcess != null){ readProcess.destroyForcibly(); }
 		}
 	}
-	
+
 	
 	/**
 	 * I( 3134: 3134) Method_Starting,Lcom/example/zhenxu/myapplication/MainActivity;->showSharedPreference(Landroid/view/View;)V
 	 * --------- beginning of system
 	 * --------- beginning of crash
+	 * 
+	 * elements in tagLog and exeLog are pairs
 	 * @param line
 	 */
 	private boolean processline(String line){
@@ -200,9 +217,8 @@ public class LogcatReader {
 		return false;
 	}
 	
-	private void process(){
+	private List<List<String>> process(){
 		Map<String,List<String>> threadGroup = new HashMap<>();
-		List<String> order = new ArrayList<String>();
 		for(int i =0 ;i < this.exeLog.size(); i++){
 			String content = exeLog.get(i);
 			String tag = tagLog.get(i);
@@ -215,22 +231,24 @@ public class LogcatReader {
 			if(seq == null){
 				seq = new ArrayList<>();
 				threadGroup.put(threadId, seq);
-				order.add(threadId);
+				if(threadOrder.contains(threadId) == false){ threadOrder.add(threadId); }
 			}
 			seq.add(content);
 		}
+		List<List<String>> resultMethodLog = new ArrayList<>();
 		if(readAll){
-			for(String start : order){
-				List<String> value = threadGroup.get(start);
-				this.methodLog.add(value);
+			for(String threadId : threadOrder){
+				List<String> value = threadGroup.get(threadId);
+				resultMethodLog.add(value);
 			}
 		}else{
-			for(String start : order){
-				List<String> value = threadGroup.get(start);
+			for(String threadId : threadOrder){
+				List<String> value = threadGroup.get(threadId);
 				List<List<String>> threadMethodLog = extractMethodSequence(value);
-				this.methodLog.addAll(threadMethodLog);
+				resultMethodLog.addAll(threadMethodLog);
 			}
 		}
+		return resultMethodLog;
 	}
 	
 	private List<List<String>> extractMethodSequence(List<String> input){

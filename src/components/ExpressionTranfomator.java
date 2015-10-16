@@ -850,7 +850,7 @@ public class ExpressionTranfomator {
 			String field_id = decodedSig[1].trim();
 			String field_type = decodedSig[2].trim();
 			String[] parentID_type = retrieveFiledId(obj);
-			
+			if(parentID_type == null) return null;
 			String combinedId = parentID_type[0].trim() + field_id;
 			return new String[]{combinedId, field_type};
 //			return parentObjId+"#"+field_id;

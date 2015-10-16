@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+import support.CommandLine;
+
 public class Main {
 	//the apk path
 	static String apkPath = 
@@ -14,11 +16,13 @@ public class Main {
 //			"/home/zhenxu/workspace/StringSymbolicTestingApp/app/build/outputs/apk/app-debug.apk";
 //			"/home/zhenxu/workspace/ThreadTest/app/build/outputs/apk/ThreadAndExceptionTest.apk";
 	static String[] targets = null;
-	
+	static String serial = null;
 	public static void main(String[] args) {
-//		targets = readInput("targets.txt");
+		targets = readInput("targets.txt");
 		environmentSetup();
-		IncrementalProcedure procedure = new IncrementalProcedure(apkPath, targets, "emulator-5554");
+		if(serial == null) serial = getDeviceSerial();
+		System.out.println("Serial: "+serial);
+		IncrementalProcedure procedure = new IncrementalProcedure(apkPath, targets, serial);
 		procedure.go();
 		new Statistic().check();
 	}
@@ -45,6 +49,17 @@ public class Main {
 			e.printStackTrace();
 		}
 	
+		return null;
+	}
+	
+	static String getDeviceSerial(){
+		CommandLine.clear();
+		CommandLine.executeCommand("adb devices");
+		String lines = CommandLine.getLatestStdoutMessage();
+		String part[] = lines.split("\n");
+		if(part.length > 1){
+			return part[1].trim().split("[ \t]")[0];
+		}
 		return null;
 	}
 }

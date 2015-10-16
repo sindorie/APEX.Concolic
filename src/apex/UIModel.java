@@ -90,7 +90,8 @@ public class UIModel implements Serializable{
 		}
 		
 		List<Event> events = newEventBuffer;
-		if(exeResult.keyboardVisible){
+		//keyboard visible and inside the application
+		if(exeResult.keyboardVisible && esPair.getTarget().getRootNode() != null){
 			Event event = esPair.getEvent();
 			if(event.getEventType() == EventFactory.iONCLICK){
 				GraphicalLayout g = event.getSource();
@@ -120,10 +121,12 @@ public class UIModel implements Serializable{
 			list.add(newLayout);
 			this.graph.addVertex(newLayout);
 			createNewEvent(newLayout);
+			Common.TRACE("New layout: "+newLayout);
 			return newLayout;
 		}else{
 			for(GraphicalLayout ui : list){
 				if(ui.hasTheSmaeLayout(node)){	
+					Common.TRACE("Encountered: "+ui);
 					return ui;
 				}
 			}
@@ -131,6 +134,7 @@ public class UIModel implements Serializable{
 			list.add(newLayout);
 			this.graph.addVertex(newLayout);
 			createNewEvent(newLayout);
+			Common.TRACE("New layout: "+newLayout);
 			return newLayout;
 		}
 	}

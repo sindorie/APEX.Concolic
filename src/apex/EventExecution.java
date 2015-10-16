@@ -10,13 +10,10 @@ import components.EventExecutor;
 import components.EventFactory;
 import components.EventSummaryPair;
 import components.GraphicalLayout;
-import components.LayoutNode;
 import components.ViewDeviceInfo;
 import components.system.InformationCollector;
-import components.system.InputMethodOverview;
 import components.system.LogcatReader;
 import components.system.WindowInformation;
-import components.system.WindowOverview;
 
 public class EventExecution {
 		
@@ -34,11 +31,14 @@ public class EventExecution {
 		viewInfoView = new ViewDeviceInfo(serial);
 		logcatReader = new LogcatReader(serial);
 		//maxTime, minTime, duration, sleepTime, startSleep
-		logcatReader.setTime(5000, 100, 200, 50, 100);
+		logcatReader.setTime(5000, 100, 300, 50, 100);
 		this.model = model;
 		this.app = app;
 	}
 	
+	/**
+	 * Ask the program to reintall the application
+	 */
 	public void reinstall(){
 		String pkgName = this.app.getPackageName();
 		ex.applyEvent(EventFactory.createReinstallEvent(pkgName, app.getInstrumentedApkPath()));
@@ -48,13 +48,22 @@ public class EventExecution {
 		ex.applyEvent(EventFactory.CreatePressEvent(null, KeyEvent.KEYCODE_HOME));	
 	}
 	
+	/**
+	 * Should be called before the termination of concolic execution if normal execution
+	 */
 	public void clearup(){
 		String pkgName = this.app.getPackageName();
 		ex.applyEvent(EventFactory.createUninstallEvent(pkgName));
 	}
 	
+	/**
+	 * reposition from current layout to the target layout
+	 * @param current
+	 * @param target
+	 * @return
+	 */
 	public boolean reposition(GraphicalLayout current, GraphicalLayout target){
-		Common.TRACE();
+		Common.TRACE(current.toString()+" to "+target.toString());
 		List<EventSummaryPair> repositionSequence = null;
 		{ //try find a pat from current to target
 			repositionSequence = Common.model.findSequence(current, target);
@@ -79,10 +88,16 @@ public class EventExecution {
 				if(target == focuedWin) return true;
 			}
 		}
-		Common.TRACE("failure");
+		Common.TRACE("failure to "+target.toString());
 		return false; // failure
 	}
 	
+	/**
+	 * do an event; read logcat, window info, focused window info, keyboard information
+	 * will check if the application has crashed
+	 * @param event
+	 * @return
+	 */
 	EventExecutionResult carrayout(Event event){
 		Common.TRACE();
 		logcatReader.clearLogcat();
@@ -91,11 +106,11 @@ public class EventExecution {
 		
 		logcatReader.readFeedBack(); // waiting is taken into consideration
 		result.logcatReading = logcatReader.getExeLog();
-//		if(Common.DEBUG){ for(String line : result.logcatReading){ Common.TRACE("EXELOG: "+line); } }
 		result.sequences = logcatReader.getMethodLog();
 		//the UI and device internal might now stabilize after the logcat finishes reading
 		try { Thread.sleep(300); } catch (InterruptedException e1) {   }
 		
+		Common.TRACE(logcatReader.getThreadOrder().toString());
 		if( logcatReader.isCrashed() ){
 			result.predefinedUI = GraphicalLayout.ErrorScene;
 			result.isCrashed = true;
@@ -141,6 +156,12 @@ public class EventExecution {
 		return result;
 	}
 	
+	/**
+	 * do a list of events. the check flag indicates if the the result of the sequence should be retrieved
+	 * @param eList
+	 * @param check
+	 * @return
+	 */
 	public EventExecutionResult doSequence(List<EventSummaryPair> eList, boolean check){
 		if(check == false){
 			Common.TRACE();

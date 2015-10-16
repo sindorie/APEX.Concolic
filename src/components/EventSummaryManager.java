@@ -1,13 +1,12 @@
 package components;
 
+import java.io.PrintStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-
 import apex.Common;
 import apex.staticFamily.StaticMethod;
 import apex.symbolic.PathSummary;
@@ -32,21 +31,16 @@ public class EventSummaryManager implements Serializable{
 	
 	final static int maxValidationCount = 10;
 
-	public List<EventSummaryPair> getRemainingInQueue(){
-		return this.queue.getRemaining();
-	}
-	public List<EventSummaryPair> getAllInvalidSegmentalSummary(){
-		return segmentalStorage_invalid.getAlldata();
-	}
-	public List<EventSummaryPair> getAllSymbolicSegmentalSummary(){
-		return segmentalStorage_symbolic.getAlldata();
-	}
-	public List<EventSummaryPair> getAllConcreteSegmentalSummary(){
-		return segmentalStorage_concrete.getAlldata();
-	}
-	public List<EventSummaryPair> getAllConcreteSummary(){
-		return concreteStorage.getAlldata();
-	}
+	/**@return the elements in the queue*/
+	public List<EventSummaryPair> getRemainingInQueue(){ return this.queue.getRemaining(); }
+	/**@return the invalid segmental event path summary*/
+	public List<EventSummaryPair> getAllInvalidSegmentalSummary(){ return segmentalStorage_invalid.getAlldata(); }
+	/**@return the symbolic segmental event path summary*/
+	public List<EventSummaryPair> getAllSymbolicSegmentalSummary(){	return segmentalStorage_symbolic.getAlldata(); }
+	/**@return the concrete segmental event path summary*/
+	public List<EventSummaryPair> getAllConcreteSegmentalSummary(){ return segmentalStorage_concrete.getAlldata();}
+	/**@return the concrete executed event path summary*/
+	public List<EventSummaryPair> getAllConcreteSummary(){return concreteStorage.getAlldata(); }
 	
 	/**
 	 * find or construct an event summary pair, do the symbolic execution if 
@@ -69,6 +63,7 @@ public class EventSummaryManager implements Serializable{
 		Common.TRACE(event.toString());
 		List<List<String>> expandedList = null;
 		List<String> signatures = null, combined = null;
+		
 		if(separetedLogs != null && !separetedLogs.isEmpty()){
 			//the input logs are not empty; do the necessary initialization
 			expandedList = new ArrayList<>();
@@ -78,16 +73,36 @@ public class EventSummaryManager implements Serializable{
 				//expand a log into full execution log and find the first method signature
 				String sig = this.extractMethodSig(log.get(0));
 				signatures.add(sig);
-				if(Common.DEBUG){
-					Common.TRACE(sig);
-					for(String line : log){
-						Common.TRACE(line);
-					}
+				
+				ToDoPath tdp = null;
+				
+				Common.TRACE("ExpandLogcatOutput"+log.size());
+				if(Common.DEBUG)for(String line : log){ Common.TRACE(line); }
+				PrintStream stdout = System.out;
+//				PrintStream stderr = System.err;
+				System.setOut(Common.NULL_STREAM);
+//				System.setErr(Common.NULL_STREAM);
+				try{ tdp = Common.symbolic.expandLogcatOutput((ArrayList<String>)log);
+				}catch(Exception e){
+					Common.NULL_STREAM.flush();
+//					System.setErr(stderr);
+					System.setOut(stdout);
+					Common.TRACE("ExpandLogcatOutput Failure");
+//					e.printStackTrace(stdout);
+					e.printStackTrace();
+				}catch(Error e1){ e1.printStackTrace(); System.gc(); }
+				Common.NULL_STREAM.flush();
+				System.setOut(stdout);
+//				System.setErr(stderr);
+				
+				if(tdp!=null){
+					List<String> expanded = tdp.getExecutionLog();
+					expandedList.add(expanded);
+					combined.addAll(expanded);
+				}else{
+					Common.TRACE("Expansion of logcat output fails");
+					for(String line : log){ Common.TRACE(line); }
 				}
-				ToDoPath tdp = Common.symbolic.expandLogcatOutput((ArrayList<String>)log);
-				List<String> expanded = tdp.getExecutionLog();
-				expandedList.add(expanded);
-				combined.addAll(expanded);
 			}
 		}
 		
@@ -106,6 +121,7 @@ public class EventSummaryManager implements Serializable{
 		
 		//for each segmental method, check records or do symbolic execution
 		List<PathSummary> pList = new ArrayList<PathSummary>();
+		Common.TRACE("Expanded list size: "+expandedList.size());
 		for(int log_index =0 ; log_index< expandedList.size() ; log_index++){
 			List<String> expandedLog = expandedList.get(log_index);
 			List<String> rawLogcat = separetedLogs.get(log_index);
@@ -147,8 +163,27 @@ public class EventSummaryManager implements Serializable{
 						continue;//failure
 					}
 					try{ 
-						sumList = Common.symbolic.doFullSymbolic(found);
-						if(sumList == null || sumList.isEmpty()) continue; // failure
+						Common.TRACE("SymbolicExecution for newly encountered method: "+signature);
+						PrintStream stdout = System.out;
+//						PrintStream stderr = System.err;
+						System.setOut(Common.NULL_STREAM);
+//						System.setErr(Common.NULL_STREAM);
+						try{ sumList = Common.symbolic.doFullSymbolic(found);
+						}catch(Exception e){
+							Common.NULL_STREAM.flush();
+							System.setOut(stdout);
+//							System.setErr(stderr);
+							Common.TRACE("Symbolic Execution failure for "+signature);
+//							e.printStackTrace(stdout);
+							e.printStackTrace();
+						}catch(Error e1){ e1.printStackTrace(); System.gc(); }
+						Common.NULL_STREAM.flush();
+						System.setOut(stdout);
+//						System.setErr(stderr);
+						Common.TRACE("Path summary size: "+(sumList == null?0:sumList.size()));
+						System.gc();
+						
+						if(sumList == null || sumList.isEmpty())continue; // failure
 					}catch(Exception e){
 						System.out.println("Exception occur during symbolic execution on "+found.getSignature());
 						e.printStackTrace();
@@ -172,6 +207,7 @@ public class EventSummaryManager implements Serializable{
 						
 					}else{
 						EventSummaryPair pair = setTargetLines(new EventSummaryPair(event.clone(), sum));
+						if(solver == null) solver = new AnchorSolver();
 						if(solver.hasValidConstraints(sum)){
 							segmentalStorage_symbolic.store(pair, false);
 							queue.add(pair);
@@ -181,15 +217,28 @@ public class EventSummaryManager implements Serializable{
 				
 				if(matched == null){
 					Common.TRACE("Symbolic execution by logcat out:"+rawLogcat.size());
+					PrintStream stdout = System.out; 
+//					PrintStream stderr = System.err;
+					System.setOut(Common.NULL_STREAM);
+//					System.setErr(Common.NULL_STREAM);
 					try{ matched = Common.symbolic.doFullSymbolic((ArrayList<String>)rawLogcat);
 					}catch(Exception e){
-						Common.TRACE("Symbolic Execution failure");
-						for(String line : rawLogcat){ Common.TRACE(line); }
-						e.printStackTrace();
+						Common.NULL_STREAM.flush();
+						System.setOut(stdout);
+//						System.setErr(stderr);
+						Common.TRACE("Symbolic Execution failure on rawLogcat");
+						e.printStackTrace(stdout);
 					}catch(Error e1){ e1.printStackTrace(); System.gc(); }
+					Common.NULL_STREAM.flush();
+					System.setOut(stdout);
+//					System.setErr(stderr);
 				}
 				if(matched != null){ pList.add(matched);
-				}else{ Common.TRACE("Matching failure"); }
+				}else{ 
+					Common.TRACE("Matching failure"); 
+					for(String line : rawLogcat){ Common.TRACE(line); }
+					System.gc();
+				}
 			}
 		}	
 		
@@ -226,6 +275,26 @@ public class EventSummaryManager implements Serializable{
 		Common.TRACE("Next Validation: "+result);
 		return result;
 	}
+	
+	public EventSummaryPair peek(){
+		EventSummaryPair result = null;
+		while(!queue.isEmpty()){
+			if(!queue.peek().isExecuted()){ break; }
+			queue.poll();
+		}
+		Common.TRACE("Next Validation: "+result);
+		return result;
+	}
+	
+	public boolean hasNext(){
+		while(!queue.isEmpty()){
+			if(!queue.peek().isExecuted()){
+				return true;
+			}
+			queue.poll();
+		}
+		return false;
+	}
 		
 	/**
 	 * Get a validation sequence for an event-path candidate
@@ -236,6 +305,7 @@ public class EventSummaryManager implements Serializable{
 		Common.TRACE();
 		Sequence seq = summaryToSequence.get(esPair);
 		if(seq == null){
+			if(solver == null) solver = new AnchorSolver();
 			List<List<EventSummaryPair>> generated = solver.solve(esPair);
 			seq = new Sequence();
 			summaryToSequence.put(esPair, seq);
@@ -250,6 +320,7 @@ public class EventSummaryManager implements Serializable{
 			if( newECount!=seq.eCount || newVCount!=seq.vCount ){
 				seq.eCount = newECount;
 				seq.vCount = newVCount;
+				if(solver == null) solver = new AnchorSolver();
 				List<List<EventSummaryPair>> generated = solver.solve(esPair);
 				if(generated != null) seq.addAll(generated);
 			}
@@ -273,6 +344,7 @@ public class EventSummaryManager implements Serializable{
 	 */
 	private EventSummaryPair setTargetLines(EventSummaryPair esPair){
 		if(Common.targets == null || Common.targets.isEmpty()) return esPair;
+		if(esPair.getPathSummary() == null ) return esPair;
 		List<String> logs = esPair.getPathSummary().getExecutionLog();
 		List<String> existence = new ArrayList<String>();
 		for(String ta : Common.targets){
