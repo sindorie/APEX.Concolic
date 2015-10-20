@@ -17,6 +17,7 @@ public class SequentialTest {
 		String scriptLocation = "script.txt";
 		String serial = Utility.getDeviceSerial();
 		if(serial == null) throw new IllegalArgumentException();
+		else System.out.println("Serial: "+serial);
 		
 		File folder = new File("generated");
 		folder.mkdirs();

@@ -1,12 +1,13 @@
 package components;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-public class CubicHashMap <K1,K2,K3,E> {
+public class CubicHashMap <K1,K2,K3,E> implements Serializable{
 	private int size = 0;
 	private Map<K1, Map<K2, Map<K3, E>>> storage = new HashMap<>();
 	
