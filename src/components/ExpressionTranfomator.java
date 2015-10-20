@@ -726,7 +726,7 @@ public class ExpressionTranfomator {
 				Expression t_obj = internal_dispatcher(obj);
 				Expression t_prefix = internal_dispatcher(prefix);
 				
-				if(obj == null || t_prefix == null) return null;
+				if(t_obj == null || t_prefix == null) return null;
 				Expression newNode = new Expression("str.prefixof");
 				newNode.add(t_obj);
 				newNode.add(t_prefix);
@@ -738,7 +738,7 @@ public class ExpressionTranfomator {
 				Expression t_obj = internal_dispatcher(obj);
 				Expression t_postfix = internal_dispatcher(postfix);
 				
-				if(obj == null || t_postfix == null) return null;
+				if(t_obj == null || t_postfix == null) return null;
 				Expression newNode = new Expression("str.suffixof");
 				newNode.add(t_obj);
 				newNode.add(t_postfix);
@@ -852,7 +852,6 @@ public class ExpressionTranfomator {
 			String field_type = decodedSig[2].trim();
 			String[] parentID_type = retrieveFiledId(obj);
 			if(parentID_type == null) return null;
-			System.out.println("");
 			String combinedId = parentID_type[0].trim() + field_id;
 			return new String[]{combinedId, field_type};
 //			return parentObjId+"#"+field_id;

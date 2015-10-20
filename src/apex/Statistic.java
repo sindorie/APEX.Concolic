@@ -24,6 +24,7 @@ public class Statistic {
 	int reachedCount = -1;
 	Set<String> concreatelines = new HashSet<String>();
 	Map<String,List<EventSummaryPair>> targetToSequence = new HashMap<>();
+	Set<String> JDBReading = new HashSet<String>();
 	
 	@Override
 	public String toString(){
@@ -47,6 +48,11 @@ public class Statistic {
 				sb.append("Succeed to reach: "+target).append(System.getProperty("line.separator"));
 				sb.append(seq).append(System.getProperty("line.separator"));
 			}
+		}
+
+		sb.append("JDBReading:"+this.JDBReading.size()).append(System.getProperty("line.separator"));
+		for(String line : JDBReading){
+			sb.append(line).append(System.getProperty("line.separator"));
 		}
 		
 		return sb.toString();
@@ -200,6 +206,15 @@ public class Statistic {
 			Common.println("Total of "+size+" reached.");
 		}
 		
+		if(Common.useJDB){
+			JDBReading.addAll(Common.JDBRecord);
+			Common.println("JDB Reading: "+this.JDBReading.size());
+			for(String line : JDBReading){
+				Common.println(line);
+			}
+		}
+		
 	}
+	
 	
 }

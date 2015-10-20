@@ -2,17 +2,30 @@ package components;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import apex.Common;
+import apex.Configuration;
 import support.CommandLine;
 
 public class EventExecutor { 
 	private String serial;
-	private boolean noReinstall = false;
+	private boolean noReinstall = false, initJDBonLaunch = false;
 	private List<ActionListener> listener = new ArrayList<>();
+	private BreakPointReader reader;
+	private List<String> lines = null;
 	
 	public EventExecutor(String serial){
 		this.serial = serial;
+	}
+	public void setInitJDBOnLaunch(boolean enable, Set<String> lines){
+		this.initJDBonLaunch = enable;
+		if(enable && lines != null){
+			this.lines = new ArrayList<>(lines);
+		}
+	}
+	public BreakPointReader getBreakPointReader(){
+		return this.reader;
 	}
 	
 	public void applyEvent(Event event){
@@ -39,6 +52,14 @@ public class EventExecutor {
 			String actName = (String) event.getAttribute(EventFactory.att_actName);
 			String shellCommand = "shell am start " + packageName + "/" + actName;
 			CommandLine.executeADBCommand(shellCommand, serial);
+			
+			if(initJDBonLaunch){
+				if(reader==null){
+					reader = new BreakPointReader(Configuration.getValue(Configuration.attADB),
+							serial, packageName, lines);
+				}
+				reader.signal();
+			}
 		}break;
 		case EventFactory.iUNINSTALL:{
 			String packageName = (String) event.getAttribute(EventFactory.att_pkgName);

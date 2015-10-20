@@ -37,6 +37,8 @@ public class Common {
 	public static Map<String, List<List<EventSummaryPair>>> foundSequences = new HashMap<>();
 	public static ExuectionDriver driver;
 	
+	public static Set<String> JDBRecord = new HashSet<String>();
+	
 	public static StaticApp app;
 	public static boolean DEBUG = true, useJDB = true;
 	
@@ -59,6 +61,7 @@ public class Common {
 		driver = null;
 		buffer.clear();
 		writers = null;
+		JDBRecord = new HashSet<String>();
 	}
 	
 	/**
@@ -120,6 +123,7 @@ public class Common {
 			list.add(new HashMap<String, List<List<EventSummaryPair>>>(Common.foundSequences));
 			list.add((ArrayList<String>)buffer);
 			list.add(Common.driver.getNewEventList());
+			list.add((HashSet<String>)Common.JDBRecord);
 			Utility.writeToDisk(list, filePath);
 		}catch(Exception e){
 			Common.TRACE("Dump data failure");
@@ -140,6 +144,7 @@ public class Common {
 			Common.foundSequences = (Map<String, List<List<EventSummaryPair>>>) list.remove(0);
 			List<String> buf = (List<String>) list.remove(0);
 			Common.buffer.addAll(buf);
+			Common.JDBRecord = (Set<String>) list.remove(0);
 			if(Common.driver!=null){Common.driver.setNewEventList((Stack<Event>)list.remove(0));}
 		}catch(Exception e){
 			Common.TRACE("Restore failure");

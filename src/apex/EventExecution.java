@@ -1,6 +1,7 @@
 package apex;
 
 import java.util.List;
+import java.util.Set;
 
 import support.CommandLine;
 import android.view.KeyEvent;
@@ -31,8 +32,12 @@ public class EventExecution {
 		logcatReader.setTime(5000, 100, 300, 50, 100);
 		
 		if(Common.useJDB){
-			
+			ex.setInitJDBOnLaunch(true, Common.targets);
 		}
+	}
+	
+	public Set<String> getLineHitFromJDB(){
+		return ex.getBreakPointReader()!=null?this.ex.getBreakPointReader().getHits():null; 
 	}
 	
 	/**
@@ -111,10 +116,24 @@ public class EventExecution {
 		
 		Common.TRACE(logcatReader.getThreadOrder().toString());
 		if( logcatReader.isCrashed() ){
+			Common.TRACE("Logcat detects crashing");
 			result.predefinedUI = GraphicalLayout.ErrorScene;
 			result.isCrashed = true;
 			return result;
 		}
+		
+		if(Common.useJDB){
+			try { Thread.sleep(100);
+			} catch (InterruptedException e) {}
+			if(this.ex.getBreakPointReader().isJustCrashed()){
+				Common.TRACE("JDB indicates crashing");
+				result.predefinedUI = GraphicalLayout.ErrorScene;
+				result.isCrashed = true;
+				return result;
+			}
+		}
+		
+		Common.TRACE("No Crashing detected");
 
 		//check if the UI within the app		
 		result.iInfo = sysInfo.getInputMethodOverview();

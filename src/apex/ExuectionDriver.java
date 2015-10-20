@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.Stack;
 
 import components.Event;
@@ -118,7 +119,6 @@ public class ExuectionDriver {
 				Common.model.update(crashEvent, finalResult);
 				Common.model.record(crashEvent);
 				
-				
 				Common.eExecution.reinstall();
 				currentUI = GraphicalLayout.Launcher;
 			}break;
@@ -179,6 +179,12 @@ public class ExuectionDriver {
 	}
 	
 	void finish(){
+		if(Common.useJDB){
+			Set<String> reading = Common.eExecution.getLineHitFromJDB();
+			if(reading!= null){
+				Common.JDBRecord.addAll(reading);
+			}
+		}
 		Common.eExecution.clearup();
 	}
 }

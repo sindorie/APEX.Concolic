@@ -32,6 +32,7 @@ public class SequentialTest {
 		while(sc.hasNextLine()){
 			String line = sc.nextLine().trim();
 			if(line.isEmpty()) continue;
+			if(line.startsWith("//")) continue;
 			if(line.matches("^[Aa][pP][pP]:.*")){
 				fileLocation = line.substring(4,line.length()).trim();
 			}else if(line.startsWith("END")){

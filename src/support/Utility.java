@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
@@ -15,6 +16,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+
+import apex.Configuration;
 
 public class Utility {
 	
@@ -195,6 +198,37 @@ public class Utility {
 	 * @return
 	 */
 	public static String getPID(String packageName, String serial) {
+		
+//		try {
+//			Process p = Runtime.getRuntime().exec(
+//					Configuration.getValue(Configuration.attADB) +
+//							" -s "+serial+" shell ps | grep " + packageName );
+//			Thread.sleep(100);
+//			InputStream in = p.getInputStream();
+//			int len = 0;
+//			while((len = in.available()) <= 0){
+//				Thread.sleep(100); }
+//			
+//			byte[] b = new byte[len];
+//			String reading = new String(b).trim();
+//			for(String line : reading.split("\n")){
+//				line = line.trim();
+//				if (!line.endsWith(packageName)){continue;}
+//				String[] parts = line.split(" ");
+//				for (int i = 1; i < parts.length; i++) {
+//					if (parts[i].equals("")){continue;}
+//					return parts[i].trim();
+//				}
+//			}
+//			
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} catch (InterruptedException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+		
 		CommandLine.executeADBCommand(" shell ps | grep " + packageName, serial);
 		String message = CommandLine.getLatestStdoutMessage();
 		if(message!= null){
