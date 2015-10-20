@@ -46,6 +46,21 @@ public class Common {
 	public final static PrintStream NULL_STREAM = new PrintStream(new OutputStream(){ @Override public void write(int b) throws IOException {} });
 	private static PrintWriter[] writers = null;
 	
+	public static void reset(){
+		model = null;
+		summaryManager = null;
+		symbolic = null;
+		eExecution = null;
+		apkPath = null;
+		serial = null;
+		targets = null;
+		remaining = null;
+		foundSequences = new HashMap<>();
+		driver = null;
+		buffer.clear();
+		writers = null;
+	}
+	
 	/**
 	 * Print the caller method information
 	 */

@@ -48,13 +48,15 @@ public class SequentialTest {
 					String appID = fileLocation.substring(index+1, fileLocation.length());//.replaceAll("[^\\w]", "");
 					File logFolder = new File("generated/"+appID);
 					logFolder.mkdirs();
-					File logFile = new File("generated/"+appID+"/log");
+					File logFile = new File("generated/"+appID+"/"+appID+".log");
 					
 					FileOutputStream fOut = new FileOutputStream(logFile);
 					PrintStream outStream = Utility.createBundleStream(fOut, stdout);
 					PrintStream errStream = Utility.createBundleStream(fOut, stderr);
 					System.setErr(errStream);
 					System.setOut(outStream);
+					
+					Common.reset();
 					
 					IncrementalProcedure procedure = new IncrementalProcedure(fileLocation, new ArrayList<String>(targets), serial);
 					procedure.go();
@@ -65,7 +67,7 @@ public class SequentialTest {
 					String statReport = stat.toString();
 					fOut.write(statReport.getBytes());
 					
-					Common.saveData("generated/"+appID+"/data");
+					Common.saveData("generated/"+appID+"/"+appID+".data");
 					fOut.close();
 				}catch(Exception e){
 					System.setOut(stdout);
@@ -89,13 +91,13 @@ public class SequentialTest {
 					String[] checked = Utility.targetLineFormateCheck(line);
 					for(String chec : checked){ targets.add(chec); }
 				}catch(Exception e){
-					
+					e.printStackTrace();
 				}
 			}
 		}
 		sc.close();
 		
-	
+		System.out.println("End sequential Test");
 	}
 
 }
