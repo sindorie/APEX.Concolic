@@ -782,6 +782,7 @@ public class ExpressionTranfomator {
 //			support.Logger.trace(expre.toYicesStatement());
 			return null;
 		}
+//		System.out.println(Arrays.toString(id_type));
 		
 		Expression var = new Expression(VAR_TAG);
 		var.add(new Expression(formateString(id_type[0]))); //id
@@ -851,6 +852,7 @@ public class ExpressionTranfomator {
 			String field_type = decodedSig[2].trim();
 			String[] parentID_type = retrieveFiledId(obj);
 			if(parentID_type == null) return null;
+			System.out.println("");
 			String combinedId = parentID_type[0].trim() + field_id;
 			return new String[]{combinedId, field_type};
 //			return parentObjId+"#"+field_id;

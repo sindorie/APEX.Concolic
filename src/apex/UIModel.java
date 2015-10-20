@@ -93,7 +93,9 @@ public class UIModel implements Serializable{
 		//keyboard visible and inside the application
 		if(exeResult.keyboardVisible && esPair.getTarget().getRootNode() != null){
 			Event event = esPair.getEvent();
-			if(event.getEventType() == EventFactory.iONCLICK){
+			if(event.getEventType() == EventFactory.iONCLICK &&
+					esPair.getSource() == esPair.getTarget()
+					){
 				GraphicalLayout g = event.getSource();
 				String iType = exeResult.iInfo.inputType;
 				String toEnter = InputMethodOverview.predefinedInput.get(iType);
@@ -109,6 +111,13 @@ public class UIModel implements Serializable{
 			}
 		}
 		newEventBuffer = null;
+		
+		this.record(esPair);
+		GraphicalLayout dest = esPair.getTarget();
+		List<EventSummaryPair> path = knownSequenceToUI.get(dest);
+		if(path == null || path.size() > this.currentLine.size()){
+			knownSequenceToUI.put(dest, new ArrayList<EventSummaryPair>(currentLine));
+		}
 		return events;
 	}
 
@@ -143,16 +152,12 @@ public class UIModel implements Serializable{
 	}
 	
 	public void record(EventSummaryPair step){
+		Common.TRACE(step.toString());
 		if(currentLine == null){
 			currentLine = new ArrayList<EventSummaryPair>();
 			this.slices.add(currentLine);
 		}
 		currentLine.add(step);
-		GraphicalLayout dest = step.getTarget();
-		List<EventSummaryPair> path = knownSequenceToUI.get(dest);
-		if(path == null || path.size() > this.currentLine.size()){
-			knownSequenceToUI.put(dest, new ArrayList<EventSummaryPair>(currentLine));
-		}
 	}
 	
 	public void hasReinstalled(){
@@ -183,6 +188,11 @@ public class UIModel implements Serializable{
 	
 	public List<EventSummaryPair> findKownSequence(GraphicalLayout target){
 		List<EventSummaryPair> list = knownSequenceToUI.get(target);
+		if(Common.DEBUG){
+			for(EventSummaryPair esPair : list){
+				Common.TRACE(esPair.getEvent().toString());
+			}
+		}
 		return list;
 	}
 	

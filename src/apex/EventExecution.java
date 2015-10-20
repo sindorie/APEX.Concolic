@@ -78,7 +78,7 @@ public class EventExecution {
 		
 		{ //try to find a known sequence from launcher
 			repositionSequence = Common.model.findKownSequence(target);
-			if(repositionSequence != null){
+			if(repositionSequence != null && repositionSequence.isEmpty() == false){
 				reinstall();
 				EventExecutionResult midResult = this.doSequence(repositionSequence, true);
 				GraphicalLayout focuedWin 
@@ -181,7 +181,9 @@ public class EventExecution {
 				}
 				if(Common.model != null) Common.model.record(eList.get(i));
 			}
-			return carrayout(eList.get(eList.size()-1).getEvent());
+			EventExecutionResult result = carrayout(eList.get(eList.size()-1).getEvent());
+			if(Common.model != null) Common.model.record(eList.get(eList.size()-1));
+			return result;
 		}
 	}
 }

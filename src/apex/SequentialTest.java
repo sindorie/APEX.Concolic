@@ -28,12 +28,14 @@ public class SequentialTest {
 		Scanner sc = new Scanner(script);
 		List<String> targets = new ArrayList<>();
 		String fileLocation = null;
+		int i = 0;
 		while(sc.hasNextLine()){
 			String line = sc.nextLine().trim();
 			if(line.isEmpty()) continue;
-			if(line.startsWith("APP:")){
-				fileLocation = line.replace("APP:", "").trim();
+			if(line.matches("^[Aa][pP][pP]:.*")){
+				fileLocation = line.substring(4,line.length()).trim();
 			}else if(line.startsWith("END")){
+				i+=1;
 				if(fileLocation == null){
 					System.out.println("Script Format error");
 					targets = new ArrayList<>();
@@ -85,7 +87,8 @@ public class SequentialTest {
 				
 				targets = new ArrayList<>();
 				fileLocation = null;
-				
+			}else if(line.equalsIgnoreCase("BREAK")){
+				break;
 			}else{
 				try{
 					String[] checked = Utility.targetLineFormateCheck(line);

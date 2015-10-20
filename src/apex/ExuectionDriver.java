@@ -115,7 +115,10 @@ public class ExuectionDriver {
 			case EventExecutionResult.ERROR_FOCUS_WDINDOW:{
 				EventSummaryPair crashEvent = Common.summaryManager.findSummary(event, null);
 				crashEvent.setTarget(finalResult.predefinedUI); //should be the ErrorScene
+				Common.model.update(crashEvent, finalResult);
 				Common.model.record(crashEvent);
+				
+				
 				Common.eExecution.reinstall();
 				currentUI = GraphicalLayout.Launcher;
 			}break;
@@ -128,7 +131,8 @@ public class ExuectionDriver {
 			Common.TRACE("Application has crashed");
 			EventSummaryPair crashEvent = Common.summaryManager.findSummary(event, null);
 			crashEvent.setTarget(finalResult.predefinedUI); //should be the ErrorScene
-			Common.model.record(crashEvent);
+			Common.model.update(crashEvent, finalResult);
+			
 			Common.eExecution.reinstall();
 			currentUI = GraphicalLayout.Launcher;
 		}else{
@@ -140,7 +144,6 @@ public class ExuectionDriver {
 			currentUI = dest;
 			List<Event> newEvents = Common.model.update(esPair, finalResult);
 			if(newEvents != null) newEventList.addAll(newEvents);
-			
 			if(Common.DEBUG){
 				Common.TRACE(dest.toString());
 				Common.TRACE("Generate events size:"+((newEvents != null)?newEvents.size():0 ));
@@ -150,7 +153,7 @@ public class ExuectionDriver {
 					}
 				}
 			}
-			Common.model.record(esPair);
+			
 			checkTargetReach(esPair);
 			Common.TRACE("Update current UI: "+dest.toString());
 		}	

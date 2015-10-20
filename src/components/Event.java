@@ -12,7 +12,7 @@ import org.jgrapht.graph.DefaultEdge;
  */
 public class Event implements Serializable{
 	int eventType; 
-	GraphicalLayout source, dest;
+	GraphicalLayout source;
 	Map<String, Object> attributes;
 	boolean isCloseKeyboard = false, ignoreByRecorder = false;
 	
@@ -78,12 +78,5 @@ public class Event implements Serializable{
 	public void setSource(GraphicalLayout source) {
 		this.source = source;
 	}
-	public GraphicalLayout getDest() {
-		return dest;
-	}
-	public void setDest(GraphicalLayout dest) {
-		this.dest = dest;
-	}
-	
 	
 }

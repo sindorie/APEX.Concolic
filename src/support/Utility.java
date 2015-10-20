@@ -23,9 +23,18 @@ public class Utility {
 		if(line.startsWith("L")){
 			line = line.substring(1, line.length());
 		}
+		
+		if(line.startsWith("/")){
+			line = line.substring(1, line.length());
+		}
 		line = line.replace("/", ".");
 		line = line.replace(";", ":");
-		line = line.replaceAll("[\",]", "");
+		line = line.replaceAll("[\"\\s,]", "");
+		line = line.replace(".java", "");
+		if(line.contains("src/")){
+			line = line.split("src/")[1];
+		}
+		
 		
 		String parts[] = line.split(":");
 		String name = parts[0];
