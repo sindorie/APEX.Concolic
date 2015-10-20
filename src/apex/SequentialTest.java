@@ -45,7 +45,7 @@ public class SequentialTest {
 				
 				try{
 					int index = fileLocation.lastIndexOf("/");
-					String appID = fileLocation.substring(index+1, fileLocation.length()).replaceAll("[^\\w]", "");
+					String appID = fileLocation.substring(index+1, fileLocation.length());//.replaceAll("[^\\w]", "");
 					File logFolder = new File("generated/"+appID);
 					logFolder.mkdirs();
 					File logFile = new File("generated/"+appID+"/log");
