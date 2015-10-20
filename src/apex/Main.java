@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Scanner;
 
 import support.CommandLine;
+import support.Utility;
 
 public class Main {
 	//the apk path
@@ -20,11 +21,12 @@ public class Main {
 	public static void main(String[] args) {
 		targets = readInput("targets.txt");
 		environmentSetup();
-		if(serial == null) serial = getDeviceSerial();
+		if(serial == null) serial = Utility.getDeviceSerial();
 		System.out.println("Serial: "+serial);
 		IncrementalProcedure procedure = new IncrementalProcedure(apkPath, targets, serial);
 		procedure.go();
 		new Statistic().check();
+		Common.saveData("generated/"+Common.apkPath.replaceAll("[^\\w]", ""));
 	}
 	
 	static void environmentSetup(){
@@ -52,14 +54,5 @@ public class Main {
 		return null;
 	}
 	
-	static String getDeviceSerial(){
-		CommandLine.clear();
-		CommandLine.executeCommand("adb devices");
-		String lines = CommandLine.getLatestStdoutMessage();
-		String part[] = lines.split("\n");
-		if(part.length > 1){
-			return part[1].trim().split("[ \t]")[0];
-		}
-		return null;
-	}
+	
 }

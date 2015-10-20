@@ -18,6 +18,48 @@ import java.util.Scanner;
 
 public class Utility {
 	
+	public static String[] targetLineFormateCheck(String line){
+		List<String> result = new ArrayList<>();
+		if(line.startsWith("L")){
+			line = line.substring(1, line.length());
+		}
+		line = line.replace("/", ".");
+		line = line.replace(";", ":");
+		line = line.replaceAll("[\",]", "");
+		
+		String parts[] = line.split(":");
+		String name = parts[0];
+		if(parts.length != 2) return null;
+		String lineNum = parts[1];
+		if(lineNum == null) return null;
+		lineNum = lineNum.replace("~", "-");
+		if(lineNum.contains("-")){
+			String[] nums = lineNum.split("-");
+			try{
+				int num1 = Integer.parseInt(nums[0]);
+				int num2 = Integer.parseInt(nums[1]);
+				for( int i = Math.min(num1, num2); i<=Math.max(num1, num2); i++){
+					result.add(name+":"+i);
+				}
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+		}else if(lineNum.contains("|")){
+			String[] nums = lineNum.split("\\|");
+			for(String num : nums){
+				try{
+					int i = Integer.parseInt(num);
+					result.add(name+":"+i);
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+			}
+		}else{
+			result.add(line.trim());
+		}
+		return result.toArray(new String[0]);
+	}
+	
 	
 	public static java.io.PrintStream createBundleStream(final OutputStream... streams){
 		return new PrintStream(new OutputStream(){

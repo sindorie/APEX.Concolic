@@ -43,7 +43,8 @@ public class SequentialTest {
 				final PrintStream stderr = System.err;
 				
 				try{
-					String appID = fileLocation.replaceAll("[^\\w]", "");
+					int index = fileLocation.lastIndexOf("/");
+					String appID = fileLocation.substring(index+1, fileLocation.length()).replaceAll("[^\\w]", "");
 					File logFolder = new File("generated/"+appID);
 					logFolder.mkdirs();
 					File logFile = new File("generated/"+appID+"/log");
@@ -83,7 +84,12 @@ public class SequentialTest {
 				fileLocation = null;
 				
 			}else{
-				targets.add(line);
+				try{
+					String[] checked = Utility.targetLineFormateCheck(line);
+					for(String chec : checked){ targets.add(chec); }
+				}catch(Exception e){
+					
+				}
 			}
 		}
 		sc.close();
