@@ -1,5 +1,6 @@
 package apex;
 
+import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -80,7 +81,6 @@ public class IncrementalProcedure {
 			Common.driver.prepare();
 			try{ loop(); }catch(Exception e){ e.printStackTrace(); }
 			Common.driver.finish();
-			Common.saveData("generated/"+Common.apkPath.replaceAll("[^\\w]", ""));
 		}
 		
 	}

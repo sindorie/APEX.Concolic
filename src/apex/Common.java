@@ -107,7 +107,7 @@ public class Common {
 			list.add(Common.driver.getNewEventList());
 			Utility.writeToDisk(list, filePath);
 		}catch(Exception e){
-			Common.TRACE("Event dump failure");
+			Common.TRACE("Dump data failure");
 			e.printStackTrace();
 		}catch(Error er){
 			er.printStackTrace();

@@ -1,7 +1,10 @@
 package apex;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import support.Utility;
@@ -12,10 +15,48 @@ import components.ExpressionTranfomator;
 
 public class Statistic {
 
-	public void check(){
-		Common.model.showGUI(true);
+	public static boolean showGUI = false;
+	
+	int reinstallCount = -1;
+	int totalConcreateEdge = 0;
+	int totalLine = 0;
+	int maxSequenceLength = -1;
+	int reachedCount = -1;
+	Set<String> concreatelines = new HashSet<String>();
+	Map<String,List<EventSummaryPair>> targetToSequence = new HashMap<>();
+	
+	@Override
+	public String toString(){
+		StringBuilder sb = new StringBuilder();
+		sb.append("Effective Reinstall Count: "+reinstallCount).append(System.getProperty("line.separator"));
+		sb.append("Total event-path edge: "+totalConcreateEdge).append(System.getProperty("line.separator"));
+		sb.append("Total lines: "+totalLine).append(System.getProperty("line.separator"));
+		sb.append("Max sequence size: "+maxSequenceLength).append(System.getProperty("line.separator"));
+		sb.append("Target reach count: "+reachedCount).append(System.getProperty("line.separator"));
+		sb.append("Concret line hit:").append(System.getProperty("line.separator"));
+		for(String line : concreatelines){
+			sb.append(line).append(System.getProperty("line.separator"));
+		}
+		sb.append("Target Hit Record:").append(System.getProperty("line.separator"));
+		for(Entry<String,List<EventSummaryPair>> entry : targetToSequence.entrySet()){
+			String target = entry.getKey();
+			List<EventSummaryPair> seq = entry.getValue();
+			if(seq == null){
+				sb.append("Fail to reach: "+target).append(System.getProperty("line.separator"));
+			}else{
+				sb.append("Succeed to reach: "+target).append(System.getProperty("line.separator"));
+				sb.append(seq).append(System.getProperty("line.separator"));
+			}
+		}
 		
-		Common.println("Total edges: "+Common.model.getAllEdges().size());
+		return sb.toString();
+	}
+	
+	public void check(){
+		if(showGUI) Common.model.showGUI(true);
+		
+		totalConcreateEdge = Common.model.getAllEdges().size();
+		Common.println("Total edges: "+totalConcreateEdge);
 		if(Common.summaryManager.getAllConcreteSegmentalSummary().isEmpty()){
 			Common.println(Utility.format_HyphenWrapper("No Concrete segmental PathSummary"));
 		}else{
@@ -117,7 +158,6 @@ public class Statistic {
 		}
 		
 		//check the all the lines
-		Set<String> lines = new HashSet<>();
 		for(EventSummaryPair esPair : Common.model.getAllEdges()){
 			if(esPair.getPathSummary() != null){
 				for(String concrete : esPair.getPathSummary().getSourceCodeLog()){
@@ -125,14 +165,24 @@ public class Statistic {
 					if(index > 0 ){
 						concrete = concrete.substring(0, index).trim();
 					}
-					lines.add(concrete);
+					concreatelines.add(concrete);
 				}
 			}
 		}
-		Common.println(Utility.format_HyphenWrapper("Concrete Hit "+lines.size()));
-		for(String line : lines){ Common.println(line); }
+		totalLine = concreatelines.size();
+		Common.println(Utility.format_HyphenWrapper("Concrete Hit "+concreatelines.size()));
+		for(String line : concreatelines){ Common.println(line); }
 
-		Common.println(Utility.format_HyphenWrapper("Reinstall counts "+Common.model.getAllSlices().size()));
+		reinstallCount = Common.model.getAllSlices().size();
+		Common.println(Utility.format_HyphenWrapper("Reinstall counts "+ reinstallCount));
+		List<List<EventSummaryPair>> seqeuence = Common.model.getAllSlices();
+		if(seqeuence != null){
+			for(List<EventSummaryPair> list : seqeuence){
+				if(list != null && list.size() > maxSequenceLength){
+					maxSequenceLength = list.size();
+				}
+			}
+		}
 		
 		if(Common.targets != null && Common.targets.isEmpty() == false){
 			Common.println(Utility.format_HyphenWrapper("Target Reachability: "));
@@ -142,9 +192,11 @@ public class Statistic {
 				if(listOfSequence != null && listOfSequence.isEmpty() == false){
 					Common.println("Target succeed: " + target);
 					Common.println(listOfSequence.get(0));
+					targetToSequence.put(target, listOfSequence.get(0));
 					size += 1;
-				}else{ Common.println("Target failed: "+ target); }
+				}else{ Common.println("Target failed: "+ target); targetToSequence.put(target, null); }
 			}
+			reachedCount = size;
 			Common.println("Total of "+size+" reached.");
 		}
 		

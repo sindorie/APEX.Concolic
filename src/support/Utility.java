@@ -9,6 +9,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +18,17 @@ import java.util.Scanner;
 
 public class Utility {
 	
+	
+	public static java.io.PrintStream createBundleStream(final OutputStream... streams){
+		return new PrintStream(new OutputStream(){
+			@Override
+			public void write(int b) throws IOException {
+				for(OutputStream stream : streams){
+					stream.write(b);
+				}
+			}
+		});
+	}
 	
 	public static List<String> fileToLines(String name) throws FileNotFoundException{
 		File f = new File(name);
@@ -25,6 +38,7 @@ public class Utility {
 			String line = sc.nextLine().trim();
 			if(line.isEmpty() ==false) arr.add(line);
 		}
+		sc.close();
 		return arr;
 	}
 	
@@ -178,6 +192,17 @@ public class Utility {
 			}
 		}
 		return result;
+	}
+	
+	public static String getDeviceSerial(){
+		CommandLine.clear();
+		CommandLine.executeCommand("adb devices");
+		String lines = CommandLine.getLatestStdoutMessage();
+		String part[] = lines.split("\n");
+		if(part.length > 1){
+			return part[1].trim().split("[ \t]")[0];
+		}
+		return null;
 	}
 
 }

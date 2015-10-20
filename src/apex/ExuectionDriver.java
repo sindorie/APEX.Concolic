@@ -102,7 +102,7 @@ public class ExuectionDriver {
 				return true; //failure
 			}
 		}else{
-			System.out.println("Should end");
+			Common.TRACE("Should end");
 			return false;
 		}
 		Common.TRACE();
