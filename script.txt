@@ -1,4 +1,19 @@
 
+APP: /home/zhenxu/workspace/AndroidTestAPKPlayGround/Experiment5B/Apps/Rolodexx.apk 
+com.example.rolodexx.ContactActivity: 52, 60, 88, 93,117
+com.example.rolodexx.ContactActivity: 183,185 , 188
+com.example.rolodexx.VCard.java:219, 255,261,286 
+END
+
+BREAK
+
+
+APP: /home/zhenxu/workspace/AndroidTestAPKPlayGround/Experiment5B/Apps/RFDrop.apk
+com.example.rfdrop.CacheService:163|164|179
+END
+
+
+
 
 APP: /home/zhenxu/workspace/AndroidTestAPKPlayGround/Experiment5B/Apps/RFDrop.apk
 
@@ -535,15 +550,6 @@ END
 
 
 
-APP: /home/zhenxu/workspace/AndroidTestAPKPlayGround/Experiment5A/Apps/ConferenceMaster.apk
-Lcom/example/conferencemaster/LaunchActivity;120	
-Lcom/example/conferencemaster/LaunchActivity;137-138
-Lcom/example/conferencemaster/NumberSelectActivity;105-110
-Lcom/example/conferencemaster/EmitActivity;134-140
-
-END
-
-
 
 
 
@@ -588,4 +594,17 @@ END
 APP: /home/zhenxu/workspace/AndroidTestAPKPlayGround/Experiment5A/Apps/BattleStat.apk
 com/example/battlestat/PingData:36|37|43|44
 com/example/battlestat/StateStore:96|97
+END
+
+
+BREAK
+
+
+
+APP: /home/zhenxu/workspace/AndroidTestAPKPlayGround/Experiment5A/Apps/ConferenceMaster.apk
+Lcom/example/conferencemaster/LaunchActivity;120	
+Lcom/example/conferencemaster/LaunchActivity;137-138
+Lcom/example/conferencemaster/NumberSelectActivity;105-110
+Lcom/example/conferencemaster/EmitActivity;134-140
+
 END
